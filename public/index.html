@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bot Inventory Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Bot Inventory Tracker</h1>
+    <span id="status" class="status disconnected">RCON Disconnected</span>
+  </header>
+
+  <div id="app">
+    <aside id="player-list">
+      <h2>Players</h2>
+      <ul id="players"></ul>
+    </aside>
+
+    <main id="detail">
+      <div id="no-selection">
+        <p>Select a player to view inventory</p>
+      </div>
+      <div id="player-detail" class="hidden">
+        <h2 id="player-name"></h2>
+
+        <!-- Top row: vitals + equipment -->
+        <section class="vitals">
+          <div class="bar-group">
+            <label>HP</label>
+            <div class="bar-container"><div id="hp-bar" class="bar hp"></div></div>
+            <span id="hp-text"></span>
+          </div>
+          <div class="bar-group">
+            <label>Shields</label>
+            <div class="bar-container"><div id="shield-bar" class="bar shield"></div></div>
+            <span id="shield-text"></span>
+          </div>
+        </section>
+
+        <!-- Main inventory layout -->
+        <div class="inventory-layout">
+          <!-- Left column: equipment slots -->
+          <div class="equip-column">
+            <div class="equip-slot" id="slot-armor"><span class="slot-label">Armor</span><span class="slot-value"></span></div>
+            <div class="equip-slot" id="slot-helmet"><span class="slot-label">Helmet</span><span class="slot-value"></span></div>
+            <div class="equip-slot" id="slot-backpack"><span class="slot-label">Backpack</span><span class="slot-value"></span></div>
+            <div class="equip-slot" id="slot-knockdown"><span class="slot-label">KD Shield</span><span class="slot-value"></span></div>
+          </div>
+
+          <!-- Center: weapons -->
+          <div class="weapons-column">
+            <div class="weapon-card" id="weapon-0">
+              <div class="weapon-header">
+                <span class="weapon-slot-label">Weapon 1</span>
+                <span class="weapon-name"></span>
+                <span class="weapon-ammo"></span>
+              </div>
+              <div class="weapon-mods"></div>
+            </div>
+            <div class="weapon-card" id="weapon-1">
+              <div class="weapon-header">
+                <span class="weapon-slot-label">Weapon 2</span>
+                <span class="weapon-name"></span>
+                <span class="weapon-ammo"></span>
+              </div>
+              <div class="weapon-mods"></div>
+            </div>
+          </div>
+
+          <!-- Right: backpack grid -->
+          <div class="backpack-column">
+            <div class="backpack-header">
+              <span>Backpack</span>
+              <span id="backpack-count"></span>
+            </div>
+            <div class="backpack-grid" id="backpack-grid"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

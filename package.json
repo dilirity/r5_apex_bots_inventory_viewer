@@ -1,0 +1,13 @@
+{
+  "name": "botai-web-tracker",
+  "version": "1.0.0",
+  "description": "Web-based bot inventory viewer for R5 botai",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "protobufjs": "^7.4.0",
+    "ws": "^8.18.0"
+  }
+}

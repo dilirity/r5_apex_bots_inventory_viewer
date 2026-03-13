@@ -119,6 +119,50 @@ function friendlyName(ref, map) {
   return map[ref] || ref.replace(/^mp_weapon_/, "").replace(/_/g, " ");
 }
 
+// --- Icon paths ---
+// Resolve a game ref to an SVG icon path. Returns null if no icon available.
+function iconPath(ref) {
+  if (!ref) return null;
+
+  // Weapons: icons/weapons/{ref}.svg
+  if (ref.startsWith("mp_weapon_")) return `icons/weapons/${ref}.svg`;
+
+  // Ammo types
+  if (["bullet", "highcal", "special", "shotgun", "sniper", "arrows"].includes(ref))
+    return `icons/ammo/${ref}.svg`;
+
+  // Consumables / healing
+  if (ref.startsWith("health_pickup_")) return `icons/consumables/${ref}.svg`;
+
+  // Grenades
+  if (ref === "mp_weapon_frag_grenade" || ref === "mp_weapon_grenade_emp" || ref === "mp_weapon_thermite_grenade")
+    return `icons/consumables/${ref}.svg`;
+
+  // Attachments: strip the _l1/_l2/_l3/_l4 suffix for icon lookup
+  const attachBase = ref.replace(/_l\d$/, "");
+  return `icons/attachments/${attachBase}.svg`;
+}
+
+// Returns an <img> tag string, or empty string if no icon
+function iconImg(ref, cls = "item-icon") {
+  const p = iconPath(ref);
+  if (!p) return "";
+  return `<img src="${p}" class="${cls}" onerror="this.style.display='none'">`;
+}
+
+// For attachments, strip tier suffix for icon file
+function attachmentIconPath(ref) {
+  if (!ref) return null;
+  const base = ref.replace(/_l\d$/, "");
+  return `icons/attachments/${base}.svg`;
+}
+
+function attachmentIconImg(ref, cls = "item-icon") {
+  const p = attachmentIconPath(ref);
+  if (!p) return "";
+  return `<img src="${p}" class="${cls}" onerror="this.style.display='none'">`;
+}
+
 // --- WebSocket ---
 ws.onmessage = (event) => {
   const msg = JSON.parse(event.data);
@@ -176,10 +220,10 @@ function renderDetail() {
   document.getElementById("shield-text").textContent = `${p.shields} / ${p.shieldsMax}`;
 
   // Equipment slots
-  renderEquipSlot("slot-armor", "Armor", p.armorTier);
-  renderEquipSlot("slot-helmet", "Helmet", p.helmetTier);
-  renderEquipSlot("slot-backpack", "Backpack", p.backpackTier);
-  renderEquipSlot("slot-knockdown", "KD Shield", p.incapshieldTier);
+  renderEquipSlot("slot-armor", "Armor", p.armorTier, "icons/equipment/body_shield.svg");
+  renderEquipSlot("slot-helmet", "Helmet", p.helmetTier, "icons/equipment/helmet.svg");
+  renderEquipSlot("slot-backpack", "Backpack", p.backpackTier, "icons/equipment/backpack.svg");
+  renderEquipSlot("slot-knockdown", "KD Shield", p.incapshieldTier, "icons/equipment/knockdown_shield.svg");
 
   // Weapons
   renderWeapon("weapon-0", p.weapons?.[0], 1);
@@ -189,27 +233,27 @@ function renderDetail() {
   renderBackpack(p);
 }
 
-function renderEquipSlot(id, label, tier) {
+function renderEquipSlot(id, label, tier, icon) {
   const el = document.getElementById(id);
-  el.className = "equip-slot t" + (tier || 0);
-  el.querySelector(".slot-value").textContent = tier > 0 ? `T${tier}` : "-";
+  el.className = `slot slot-equip has-border t${tier || 0}`;
+  const val = el.querySelector(".slot-value");
+  if (icon) {
+    val.innerHTML = `<img src="${icon}" class="slot-icon tier-icon-${tier || 0}">`;
+  } else {
+    val.textContent = tier > 0 ? `T${tier}` : "-";
+  }
 }
 
 function renderWeapon(id, w, slotNum) {
   const card = document.getElementById(id);
+  const iconArea = card.querySelector(".weapon-icon-area");
   const nameEl = card.querySelector(".weapon-name");
   const ammoEl = card.querySelector(".weapon-ammo");
   const modsEl = card.querySelector(".weapon-mods");
-  const labelEl = card.querySelector(".weapon-slot-label");
-
-  labelEl.textContent = `Weapon ${slotNum}`;
-
-  // Remove old ammo bar
-  const oldBar = card.querySelector(".ammo-bar");
-  if (oldBar) oldBar.remove();
 
   if (!w || !w.n) {
     card.className = "weapon-card empty";
+    iconArea.innerHTML = "";
     nameEl.textContent = "Empty";
     ammoEl.innerHTML = "";
     modsEl.innerHTML = "";
@@ -217,52 +261,124 @@ function renderWeapon(id, w, slotNum) {
   }
 
   card.className = "weapon-card" + (w.a ? " active" : "");
+
+  // Big weapon icon centered
+  const iPath = iconPath(w.n);
+  iconArea.innerHTML = iPath
+    ? `<img src="${iPath}" class="weapon-icon" onerror="this.style.display='none'">`
+    : "";
+
+  // Weapon name
   nameEl.textContent = friendlyName(w.n, WEAPON_NAMES);
-  ammoEl.innerHTML = `<span class="clip">${w.cl}/${w.cm}</span><span class="sep"> + </span><span class="reserve">${w.rs}</span>`;
 
-  // Ammo type color bar
-  const bar = document.createElement("div");
-  bar.className = "ammo-bar " + (w.at || "");
-  card.insertBefore(bar, card.firstChild);
-
-  // Mods
+  // Bottom row: mods left, ammo type dot + count right
   modsEl.innerHTML = "";
   if (w.m && w.m.length > 0) {
     w.m.forEach((mod) => {
-      const chip = document.createElement("span");
-      chip.className = "mod-slot t" + (mod.t || 0);
-      chip.textContent = friendlyName(mod.r, MOD_NAMES);
-      modsEl.appendChild(chip);
+      const s = document.createElement("span");
+      s.className = `slot slot-mod has-border t${mod.t || 0}`;
+      s.title = friendlyName(mod.r, MOD_NAMES);
+      const aPath = attachmentIconPath(mod.r);
+      if (aPath) {
+        s.innerHTML = `<img src="${aPath}" class="slot-icon tier-icon-${mod.t || 0}" onerror="this.style.display='none'">`;
+      }
+      modsEl.appendChild(s);
     });
   }
+
+  const ammoIcon = iconPath(w.at);
+  const ammoImg = ammoIcon ? `<img src="${ammoIcon}" class="ammo-icon" onerror="this.style.display='none'">` : "";
+  ammoEl.innerHTML = `<span class="clip">${w.cl}/${w.cm}</span>${ammoImg}`;
+}
+
+function buildInvCell(item) {
+  const cell = document.createElement("div");
+  const isAmmo = ["bullet", "highcal", "special", "shotgun", "sniper", "arrows"].includes(item.r);
+  const isTiered = item.r && !item.r.startsWith("health_pickup_") && !isAmmo && !item.r.startsWith("mp_weapon_");
+  cell.className = `slot slot-inv has-border t${item.t || 0}`;
+  const tierCls = isTiered ? `tier-icon-${item.t}` : "";
+  const icon = iconPath(item.r);
+  const maxStack = item.m || item.c;
+  const count = item.c;
+
+  let html = "";
+  if (icon) {
+    html += `<img src="${icon}" class="slot-icon ${tierCls}" onerror="this.style.display='none'">`;
+  }
+
+  if (isAmmo) {
+    html += `<span class="stack-count">${count}</span>`;
+  } else if (count > 1) {
+    html += `<span class="stack-count">${count}</span>`;
+  }
+
+  if (isAmmo) {
+    const perDrop = item.d || 1;
+    const totalPips = Math.max(1, Math.round(maxStack / perDrop));
+    const filledPips = Math.ceil(count / perDrop);
+    html += '<div class="stack-pips">';
+    for (let p = 0; p < totalPips; p++) {
+      html += `<span class="pip${p < filledPips ? " filled" : ""}"></span>`;
+    }
+    html += '</div>';
+  } else {
+    const totalPips = Math.max(1, maxStack);
+    html += '<div class="stack-pips">';
+    for (let p = 0; p < totalPips; p++) {
+      html += `<span class="pip${p < count ? " filled" : ""}"></span>`;
+    }
+    html += '</div>';
+  }
+
+  cell.innerHTML = html;
+  return cell;
 }
 
 function renderBackpack(p) {
   const grid = document.getElementById("backpack-grid");
-  const countEl = document.getElementById("backpack-count");
   const capacity = BACKPACK_SLOTS[p.backpackTier] || 10;
   const items = p.i || [];
-
-  countEl.textContent = `${items.length} / ${capacity}`;
   grid.innerHTML = "";
 
-  // Each inventory entry = one backpack slot (c = stack count, t = tier)
-  items.forEach((item) => {
-    const cell = document.createElement("div");
-    cell.className = `bp-cell has-item t${item.t || 0}`;
-    const name = friendlyName(item.r, ITEM_NAMES);
-    cell.innerHTML = `<span class="item-name">${esc(name)}</span>`;
-    if (item.c > 1) {
-      cell.innerHTML += `<span class="item-count">x${item.c}</span>`;
-    }
-    grid.appendChild(cell);
-  });
+  const COLS = 8;
+  const ROWS = 2;
+  const lockedCols = (MAX_BACKPACK_SLOTS - capacity) / ROWS;
+  const activeCols = COLS - lockedCols;
 
-  // Fill remaining with empty/locked cells
-  for (let i = items.length; i < MAX_BACKPACK_SLOTS; i++) {
-    const cell = document.createElement("div");
-    cell.className = i < capacity ? "bp-cell" : "bp-cell locked";
-    grid.appendChild(cell);
+  let itemIdx = 0;
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      if (col >= activeCols) {
+        const cell = document.createElement("div");
+        cell.className = "slot slot-inv locked";
+        const s = 92, c = 6, a = 14; // slot size, corner cut, arm length
+        cell.innerHTML = `<svg class="corner-brackets" viewBox="0 0 ${s} ${s}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2">
+          <polyline points="${c},0 ${a},0"/>
+          <polyline points="${c},0 0,${c}"/>
+          <polyline points="0,${c} 0,${a}"/>
+          <polyline points="${s-a},0 ${s-c},0"/>
+          <polyline points="${s-c},0 ${s},${c}"/>
+          <polyline points="${s},${c} ${s},${a}"/>
+          <polyline points="0,${s-a} 0,${s-c}"/>
+          <polyline points="0,${s-c} ${c},${s}"/>
+          <polyline points="${c},${s} ${a},${s}"/>
+          <polyline points="${s},${s-a} ${s},${s-c}"/>
+          <polyline points="${s},${s-c} ${s-c},${s}"/>
+          <polyline points="${s-c},${s} ${s-a},${s}"/>
+        </svg>
+        <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+        grid.appendChild(cell);
+      } else if (itemIdx < items.length) {
+        // Item slot
+        grid.appendChild(buildInvCell(items[itemIdx]));
+        itemIdx++;
+      } else {
+        // Empty available slot
+        const cell = document.createElement("div");
+        cell.className = "slot slot-inv";
+        grid.appendChild(cell);
+      }
+    }
   }
 }
 

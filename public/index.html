@@ -39,44 +39,35 @@
           </div>
         </section>
 
-        <!-- Main inventory layout -->
-        <div class="inventory-layout">
-          <!-- Left column: equipment slots -->
-          <div class="equip-column">
-            <div class="equip-slot" id="slot-armor"><span class="slot-label">Armor</span><span class="slot-value"></span></div>
-            <div class="equip-slot" id="slot-helmet"><span class="slot-label">Helmet</span><span class="slot-value"></span></div>
-            <div class="equip-slot" id="slot-backpack"><span class="slot-label">Backpack</span><span class="slot-value"></span></div>
-            <div class="equip-slot" id="slot-knockdown"><span class="slot-label">KD Shield</span><span class="slot-value"></span></div>
-          </div>
-
-          <!-- Center: weapons -->
-          <div class="weapons-column">
-            <div class="weapon-card" id="weapon-0">
-              <div class="weapon-header">
-                <span class="weapon-slot-label">Weapon 1</span>
-                <span class="weapon-name"></span>
-                <span class="weapon-ammo"></span>
-              </div>
+        <!-- Weapons row: side by side -->
+        <div class="weapons-row">
+          <div class="weapon-card" id="weapon-0">
+            <div class="weapon-icon-area"></div>
+            <div class="weapon-name"></div>
+            <div class="weapon-bottom">
               <div class="weapon-mods"></div>
+              <div class="weapon-ammo"></div>
             </div>
-            <div class="weapon-card" id="weapon-1">
-              <div class="weapon-header">
-                <span class="weapon-slot-label">Weapon 2</span>
-                <span class="weapon-name"></span>
-                <span class="weapon-ammo"></span>
-              </div>
+          </div>
+          <div class="weapon-card" id="weapon-1">
+            <div class="weapon-icon-area"></div>
+            <div class="weapon-name"></div>
+            <div class="weapon-bottom">
               <div class="weapon-mods"></div>
+              <div class="weapon-ammo"></div>
             </div>
           </div>
+        </div>
 
-          <!-- Right: backpack grid -->
-          <div class="backpack-column">
-            <div class="backpack-header">
-              <span>Backpack</span>
-              <span id="backpack-count"></span>
-            </div>
-            <div class="backpack-grid" id="backpack-grid"></div>
-          </div>
+        <!-- Backpack grid -->
+        <div class="backpack-grid" id="backpack-grid"></div>
+
+        <!-- Equipment row: armor, helmet, backpack, KD shield -->
+        <div class="equip-row">
+          <div class="equip-slot" id="slot-armor"><span class="slot-value"></span></div>
+          <div class="equip-slot" id="slot-helmet"><span class="slot-value"></span></div>
+          <div class="equip-slot" id="slot-backpack"><span class="slot-value"></span></div>
+          <div class="equip-slot" id="slot-knockdown"><span class="slot-value"></span></div>
         </div>
       </div>
     </main>

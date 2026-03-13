@@ -3,27 +3,32 @@
 :root {
   --bg-dark: #0d1117;
   --bg-panel: #161b22;
-  --bg-slot: #1c2333;
-  --bg-slot-hover: #242d3d;
+  --bg-slot: #111318;
   --border: #30363d;
   --text: #e6edf3;
   --text-dim: #7d8590;
   --text-muted: #484f58;
+  --corner-cut: 6px;
 
-  /* Tier colors matching Apex */
   --tier-0: #7d8590;
   --tier-1: #9ca3af;
   --tier-2: #60a5fa;
   --tier-3: #a78bfa;
   --tier-4: #fbbf24;
 
-  /* Ammo type colors */
   --ammo-light: #d97706;
   --ammo-heavy: #16a34a;
   --ammo-energy: #22d3ee;
   --ammo-shotgun: #ef4444;
   --ammo-sniper: #6366f1;
   --ammo-arrows: #a78bfa;
+
+  /* Tier tint rgba for gradients */
+  --tint-0: rgba(200,210,220,0.15);
+  --tint-1: rgba(200,210,220,0.25);
+  --tint-2: rgba(96,165,250,0.6);
+  --tint-3: rgba(167,139,250,0.6);
+  --tint-4: rgba(251,191,36,0.6);
 }
 
 body {
@@ -35,6 +40,7 @@ body {
   flex-direction: column;
 }
 
+/* --- Header --- */
 header {
   display: flex;
   align-items: center;
@@ -101,6 +107,7 @@ main#detail {
   padding: 16px 20px;
   overflow-y: auto;
 }
+#player-detail { max-width: 1100px; }
 #no-selection {
   display: flex;
   align-items: center;
@@ -152,203 +159,268 @@ main#detail {
   color: var(--text-dim);
 }
 
-/* --- Inventory layout (3 columns) --- */
-.inventory-layout {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-}
-
-/* --- Equipment column --- */
-.equip-column {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100px;
-}
-.equip-slot {
-  background: var(--bg-slot);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 10px 8px;
-  text-align: center;
-  transition: border-color 0.2s;
-}
-.equip-slot .slot-label {
-  display: block;
-  font-size: 9px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-.equip-slot .slot-value {
-  display: block;
-  font-size: 16px;
-  font-weight: 700;
-}
-
-/* Tier border colors */
-.equip-slot.t1 { border-color: var(--tier-1); }
-.equip-slot.t1 .slot-value { color: var(--tier-1); }
-.equip-slot.t2 { border-color: var(--tier-2); }
-.equip-slot.t2 .slot-value { color: var(--tier-2); }
-.equip-slot.t3 { border-color: var(--tier-3); }
-.equip-slot.t3 .slot-value { color: var(--tier-3); }
-.equip-slot.t4 { border-color: var(--tier-4); }
-.equip-slot.t4 .slot-value { color: var(--tier-4); }
-.equip-slot.t0 .slot-value { color: var(--text-muted); }
-
-/* --- Weapons column --- */
-.weapons-column {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-  max-width: 380px;
-}
-.weapon-card {
-  background: var(--bg-slot);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.weapon-card.active { border-color: #e94560; }
-.weapon-card.empty { opacity: 0.4; }
-.weapon-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-}
-.weapon-slot-label {
-  font-size: 9px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-width: 55px;
-}
-.weapon-name {
-  font-size: 14px;
-  font-weight: 600;
-  flex: 1;
-}
-.weapon-ammo {
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.weapon-ammo .clip { color: #4ade80; }
-.weapon-ammo .sep { color: var(--text-muted); }
-.weapon-ammo .reserve { color: var(--text-dim); }
-
-/* Ammo type indicator */
-.weapon-card .ammo-bar {
-  height: 3px;
-  width: 100%;
-}
-.ammo-bar.light { background: var(--ammo-light); }
-.ammo-bar.heavy, .ammo-bar.highcal { background: var(--ammo-heavy); }
-.ammo-bar.energy, .ammo-bar.special { background: var(--ammo-energy); }
-.ammo-bar.shotgun { background: var(--ammo-shotgun); }
-.ammo-bar.sniper { background: var(--ammo-sniper); }
-.ammo-bar.arrows { background: var(--ammo-arrows); }
-.ammo-bar.bullet { background: var(--ammo-light); }
-
-/* Weapon mods/attachments */
-.weapon-mods {
-  display: flex;
-  gap: 4px;
-  padding: 0 12px 10px;
-  flex-wrap: wrap;
-}
-.mod-slot {
-  background: #0d1117;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 3px 8px;
-  font-size: 10px;
-  color: var(--text-dim);
-}
-.mod-slot.t1 { border-color: var(--tier-1); color: var(--tier-1); }
-.mod-slot.t2 { border-color: var(--tier-2); color: var(--tier-2); }
-.mod-slot.t3 { border-color: var(--tier-3); color: var(--tier-3); }
-.mod-slot.t4 { border-color: var(--tier-4); color: var(--tier-4); }
-
-/* --- Backpack column --- */
-.backpack-column {
-  width: 280px;
-  min-width: 280px;
-}
-.backpack-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 11px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-#backpack-count {
-  color: var(--text-muted);
-  font-size: 11px;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.backpack-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-}
-.bp-cell {
-  background: var(--bg-slot);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  aspect-ratio: 1;
+/* ==========================================================
+   UNIFIED SLOT SYSTEM
+   All slots share .slot base: clipped corners, tier gradients
+   ========================================================== */
+.slot {
+  --border-w: 2px;
+  --inner-cut: 6px; /* corner-cut minus border-w */
+  background: rgba(255,255,255,0.4); /* this IS the border */
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  position: relative;
-  min-height: 60px;
+  clip-path: polygon(
+    var(--corner-cut) 0, calc(100% - var(--corner-cut)) 0,
+    100% var(--corner-cut), 100% calc(100% - var(--corner-cut)),
+    calc(100% - var(--corner-cut)) 100%, var(--corner-cut) 100%,
+    0 calc(100% - var(--corner-cut)), 0 var(--corner-cut)
+  );
 }
-.bp-cell.locked {
-  background: #0a0d12;
-  border-color: #1c2028;
-  opacity: 0.3;
+
+/* Inner fill — sits inside the border */
+.slot::before {
+  content: "";
+  position: absolute;
+  inset: var(--border-w);
+  background: var(--bg-slot);
+  clip-path: polygon(
+    var(--inner-cut) 0, calc(100% - var(--inner-cut)) 0,
+    100% var(--inner-cut), 100% calc(100% - var(--inner-cut)),
+    calc(100% - var(--inner-cut)) 100%, var(--inner-cut) 100%,
+    0 calc(100% - var(--inner-cut)), 0 var(--inner-cut)
+  );
+  z-index: 0;
 }
-.bp-cell.locked::after {
+
+/* Tier gradient tint — covers full slot including border so it blends */
+.slot::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 4px,
-    rgba(255,255,255,0.02) 4px,
-    rgba(255,255,255,0.02) 8px
-  );
+  pointer-events: none;
+  z-index: 1;
 }
-.bp-cell .item-count {
+.slot.t0::after { background: linear-gradient(to top, var(--tint-0) 0%, transparent 50%); }
+.slot.t1::after { background: linear-gradient(to top, var(--tint-1) 0%, transparent 50%); }
+.slot.t2::after { background: linear-gradient(to top, var(--tint-2) 0%, transparent 50%); }
+.slot.t3::after { background: linear-gradient(to top, var(--tint-3) 0%, transparent 50%); }
+.slot.t4::after { background: linear-gradient(to top, var(--tint-4) 0%, transparent 50%); }
+
+/* Slot contents sit above everything */
+.slot > * { position: relative; z-index: 2; }
+
+.slot.has-border.t1 { background: linear-gradient(to top, var(--tier-1) 0%, var(--tier-1) 2px, rgba(255,255,255,0.4) 80%); }
+.slot.has-border.t2 { background: linear-gradient(to top, var(--tier-2) 0%, var(--tier-2) 2px, rgba(255,255,255,0.4) 80%); }
+.slot.has-border.t3 { background: linear-gradient(to top, var(--tier-3) 0%, var(--tier-3) 2px, rgba(255,255,255,0.4) 80%); }
+.slot.has-border.t4 { background: linear-gradient(to top, var(--tier-4) 0%, var(--tier-4) 2px, rgba(255,255,255,0.4) 80%); }
+
+/* --- Inventory slots: 92x92 --- */
+.slot-inv {
+  width: 92px;
+  height: 92px;
+  padding: 4px;
+}
+.slot-inv .slot-icon {
+  width: 70px;
+  height: 70px;
+}
+
+/* --- Equipment slots: 94x94 --- */
+.slot-equip {
+  width: 94px;
+  height: 94px;
+  padding: 4px;
+}
+.slot-equip .slot-icon {
+  width: 60px;
+  height: 60px;
+}
+
+/* --- Weapon attachment slots: 75x75 --- */
+.slot-mod {
+  width: 75px;
+  height: 75px;
+  padding: 6px;
+}
+.slot-mod .slot-icon {
+  width: 50px;
+  height: 50px;
+}
+
+/* --- Locked slots — SVG corner brackets */
+.slot.locked {
+  background: transparent;
+  clip-path: none;
+  opacity: 0.4;
+}
+.slot.locked .corner-brackets {
   position: absolute;
-  bottom: 3px;
-  right: 5px;
-  font-size: 11px;
+  inset: 0;
+  z-index: 0;
+}
+.slot.locked::before { display: none; }
+.slot.locked::after { display: none; }
+.slot.locked .lock-icon {
+  width: 24px;
+  height: 24px;
+  opacity: 0.6;
+}
+
+/* Stack pips — dashes spanning slot width */
+.stack-pips {
+  display: flex;
+  gap: 2px;
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  z-index: 2;
+}
+.pip {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+}
+.pip.filled { background: rgba(200,210,220,0.8); }
+.slot.t1 .pip.filled { background: rgba(180,190,200,0.8); }
+.slot.t2 .pip.filled { background: rgba(96,165,250,0.8); }
+.slot.t3 .pip.filled { background: rgba(167,139,250,0.8); }
+.slot.t4 .pip.filled { background: rgba(251,191,36,0.8); }
+
+/* Stack count */
+.stack-count {
+  position: absolute;
+  bottom: 14px;
+  right: 8px;
+  font-size: 18px;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  color: #e6edf3;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  line-height: 1;
+  z-index: 2;
 }
-.bp-cell .item-name {
-  font-size: 9px;
-  text-align: center;
-  color: var(--text-dim);
-  word-break: break-word;
-  line-height: 1.2;
+
+/* ==========================================================
+   LAYOUT SECTIONS
+   ========================================================== */
+
+/* --- Weapons row --- */
+.weapons-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 80px;
+  justify-content: center;
 }
-/* Tier colored top border on items */
-.bp-cell.has-item { border-top-width: 2px; }
-.bp-cell.t1 { border-top-color: var(--tier-1); }
-.bp-cell.t2 { border-top-color: var(--tier-2); }
-.bp-cell.t3 { border-top-color: var(--tier-3); }
-.bp-cell.t4 { border-top-color: var(--tier-4); }
+.weapon-card {
+  background: rgba(255,255,255,0.18); /* border color */
+  width: 510px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  /* Cut bottom-right corner at ~70 degrees */
+  clip-path: polygon(0px 0px, 100% 0px, 100% 188px, 476px 100.00%, 0px 100%);
+}
+.weapon-card::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: var(--bg-slot);
+  clip-path: polygon(0px 0px, 100% 0px, 100% 186px, 474px 100.00%, 0px 100%);
+  z-index: 0;
+}
+.weapon-card > * { position: relative; z-index: 1; }
+.weapon-card.active {
+  position: relative;
+}
+.weapon-card.active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-top: 20px solid #fbbf24;
+  border-right: 20px solid transparent;
+  z-index: 1;
+}
+.weapon-card.empty { opacity: 0.4; }
+
+.weapon-icon-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  padding: 15px 10px 5px;
+}
+.weapon-icon-area .weapon-icon {
+  height: 80px;
+  max-width: 100%;
+}
+.weapon-icon {
+  /* SVGs are already white, no filter needed */
+}
+
+.weapon-card .weapon-name {
+  font-size: 16px;
+  font-weight: 700;
+  padding: 0 10px;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.weapon-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 6px 10px 8px;
+  margin-top: auto;
+}
+.weapon-mods {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+}
+.weapon-ammo {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.weapon-ammo .ammo-icon {
+  width: 75px;
+  height: 75px;
+}
+.weapon-ammo .clip { color: #4ade80; }
+
+.backpack-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 92px);
+  justify-content: center;
+  margin-bottom: 40px;
+  gap: 8px;
+}
+
+/* --- Equipment row --- */
+.equip-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* ==========================================================
+   ICON FILTERS
+   ========================================================== */
+/* All SVGs are now normalized to white — no invert needed */
+.tier-icon-0 { }
+.tier-icon-1 { }
+.tier-icon-2 { }
+.tier-icon-3 { }
+.tier-icon-4 { }

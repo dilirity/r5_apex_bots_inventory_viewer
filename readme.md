@@ -1,3 +1,11 @@
+# Bot Inventory tracker
+
+## Preview
+
+<img title="UI preview" alt="UI preview" src="preview.jpg">
+
+## Setup
+
 in game console after loading map:
 
 ```

@@ -331,6 +331,19 @@ function buildInvCell(item) {
   }
 
   cell.innerHTML = html;
+
+  // Right-click to drop one sub-stack
+  cell.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (selectedPlayer === null) return;
+    const perDrop = item.d || item.c;
+    const dropCount = isAmmo ? perDrop : 1;
+    ws.send(JSON.stringify({
+      type: "exec",
+      command: `script bot_drop_item(${selectedPlayer}, "${item.r}", ${dropCount})`
+    }));
+  });
+
   return cell;
 }
 

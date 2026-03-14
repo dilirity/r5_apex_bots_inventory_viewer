@@ -222,6 +222,7 @@ main#detail {
   width: 92px;
   height: 92px;
   padding: 4px;
+  cursor: context-menu;
 }
 .slot-inv .slot-icon {
   width: 70px;

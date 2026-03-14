@@ -220,10 +220,10 @@ function renderDetail() {
   document.getElementById("shield-text").textContent = `${p.shields} / ${p.shieldsMax}`;
 
   // Equipment slots
-  renderEquipSlot("slot-armor", "Armor", p.armorTier, "icons/equipment/body_shield.svg");
-  renderEquipSlot("slot-helmet", "Helmet", p.helmetTier, "icons/equipment/helmet.svg");
-  renderEquipSlot("slot-backpack", "Backpack", p.backpackTier, "icons/equipment/backpack.svg");
-  renderEquipSlot("slot-knockdown", "KD Shield", p.incapshieldTier, "icons/equipment/knockdown_shield.svg");
+  renderEquipSlot("slot-armor", p.armorTier, "icons/equipment/body_shield.svg", "armor");
+  renderEquipSlot("slot-helmet", p.helmetTier, "icons/equipment/helmet.svg", "helmet");
+  renderEquipSlot("slot-backpack", p.backpackTier, "icons/equipment/backpack.svg", "backpack");
+  renderEquipSlot("slot-knockdown", p.incapshieldTier, "icons/equipment/knockdown_shield.svg", "incapshield");
 
   // Weapons
   renderWeapon("weapon-0", p.weapons?.[0], 1);
@@ -233,7 +233,7 @@ function renderDetail() {
   renderBackpack(p);
 }
 
-function renderEquipSlot(id, label, tier, icon) {
+function renderEquipSlot(id, tier, icon, slotName) {
   const el = document.getElementById(id);
   el.className = `slot slot-equip has-border t${tier || 0}`;
   const val = el.querySelector(".slot-value");
@@ -242,6 +242,16 @@ function renderEquipSlot(id, label, tier, icon) {
   } else {
     val.textContent = tier > 0 ? `T${tier}` : "-";
   }
+
+  // Right-click to drop equipment
+  el.oncontextmenu = (e) => {
+    e.preventDefault();
+    if (selectedPlayer === null || tier === 0) return;
+    ws.send(JSON.stringify({
+      type: "exec",
+      command: `script bot_drop_equip(${selectedPlayer}, "${slotName}")`
+    }));
+  };
 }
 
 function renderWeapon(id, w, slotNum) {
@@ -262,11 +272,23 @@ function renderWeapon(id, w, slotNum) {
 
   card.className = "weapon-card" + (w.a ? " active" : "");
 
+  const weaponIdx = slotNum - 1; // 0 or 1
+
   // Big weapon icon centered
   const iPath = iconPath(w.n);
   iconArea.innerHTML = iPath
     ? `<img src="${iPath}" class="weapon-icon" onerror="this.style.display='none'">`
     : "";
+
+  // Right-click weapon icon to drop weapon
+  iconArea.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (selectedPlayer === null) return;
+    ws.send(JSON.stringify({
+      type: "exec",
+      command: `script bot_drop_weapon(${selectedPlayer}, ${weaponIdx})`
+    }));
+  });
 
   // Weapon name
   nameEl.textContent = friendlyName(w.n, WEAPON_NAMES);
@@ -282,6 +304,16 @@ function renderWeapon(id, w, slotNum) {
       if (aPath) {
         s.innerHTML = `<img src="${aPath}" class="slot-icon tier-icon-${mod.t || 0}" onerror="this.style.display='none'">`;
       }
+      // Right-click attachment to drop it
+      s.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (selectedPlayer === null) return;
+        ws.send(JSON.stringify({
+          type: "exec",
+          command: `script bot_drop_mod(${selectedPlayer}, ${weaponIdx}, "${mod.r}")`
+        }));
+      });
       modsEl.appendChild(s);
     });
   }

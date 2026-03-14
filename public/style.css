@@ -234,6 +234,7 @@ main#detail {
   width: 94px;
   height: 94px;
   padding: 4px;
+  cursor: context-menu;
 }
 .slot-equip .slot-icon {
   width: 60px;
@@ -245,6 +246,7 @@ main#detail {
   width: 75px;
   height: 75px;
   padding: 6px;
+  cursor: context-menu;
 }
 .slot-mod .slot-icon {
   width: 50px;

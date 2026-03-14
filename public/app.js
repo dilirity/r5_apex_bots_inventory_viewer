@@ -163,6 +163,8 @@ function attachmentIconImg(ref, cls = "item-icon") {
   return `<img src="${p}" class="${cls}" onerror="this.style.display='none'">`;
 }
 
+let debugData = null;
+
 // --- WebSocket ---
 ws.onmessage = (event) => {
   const msg = JSON.parse(event.data);
@@ -172,6 +174,9 @@ ws.onmessage = (event) => {
     inventoryData = msg.data;
     renderPlayerList();
     if (selectedPlayer !== null) renderDetail();
+  } else if (msg.type === "debug") {
+    debugData = msg.data;
+    if (selectedPlayer !== null) renderDebug();
   }
 };
 
@@ -231,6 +236,9 @@ function renderDetail() {
 
   // Backpack grid
   renderBackpack(p);
+
+  // Debug panel
+  renderDebug();
 }
 
 function renderEquipSlot(id, tier, icon, slotName) {
@@ -425,6 +433,88 @@ function renderBackpack(p) {
       }
     }
   }
+}
+
+const LOOT_PHASE_NAMES = {
+  NONE: "Idle", APPROACH: "Approaching", INTERACT: "Opening Bin",
+  PICKUP: "Picking Up", DISCARD: "Discarding", DONE: "Done"
+};
+
+function renderDebug() {
+  const panel = document.getElementById("debug-panel");
+  if (!debugData || !debugData.bots || selectedPlayer === null) {
+    panel.innerHTML = "";
+    return;
+  }
+
+  // Match by player name
+  const playerName = inventoryData?.players?.[selectedPlayer]?.name;
+  const bot = debugData.bots.find(b => b.name === playerName);
+  if (!bot) {
+    panel.innerHTML = '<div class="debug-card"><h4>No debug data</h4></div>';
+    return;
+  }
+
+  const stateClass = `state-${(bot.task || "idle").toLowerCase()}`;
+
+  let html = "";
+
+  // Brain & Task card
+  html += `<div class="debug-card">
+    <h4>Brain</h4>
+    <div class="debug-row"><span class="label">Task</span><span class="value ${stateClass}">${bot.task || "?"}</span></div>
+    <div class="debug-row"><span class="label">Intent</span><span class="value">${bot.intent || "HOLD"}</span></div>
+    <div class="debug-row"><span class="label">Movement</span><span class="value">${bot.move || "?"}</span></div>
+    <div class="debug-row"><span class="label">Next Traverse</span><span class="value">${bot.nextTrav || "NONE"}</span></div>
+  </div>`;
+
+  // Scores card
+  const lootScore = bot.lootScore || 0;
+  const healScore = bot.healScore || 0;
+  html += `<div class="debug-card">
+    <h4>Evaluation</h4>
+    <div class="debug-row"><span class="label">Loot Urgency</span><span class="value">${lootScore}</span></div>
+    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill loot" style="width:${lootScore * 100}%"></div></div></div>
+    <div class="debug-row"><span class="label">Heal Urgency</span><span class="value">${healScore}</span></div>
+    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill heal" style="width:${healScore * 100}%"></div></div></div>
+    ${bot.healItem ? `<div class="debug-row"><span class="label">Heal Item</span><span class="value">${friendlyName(bot.healItem, ITEM_NAMES)}</span></div>` : ""}
+  </div>`;
+
+  // Loot State card
+  html += `<div class="debug-card">
+    <h4>Loot</h4>
+    <div class="debug-row"><span class="label">Phase</span><span class="value">${LOOT_PHASE_NAMES[bot.lootPhase] || bot.lootPhase || "Idle"}</span></div>
+    ${bot.lootEntIdx >= 0 ? `<div class="debug-row"><span class="label">Target</span><span class="value">#${bot.lootEntIdx}</span></div>` : ""}
+    <div class="debug-row"><span class="label">Memory</span><span class="value">${bot.lootMemory || 0} items</span></div>
+    <div class="debug-row"><span class="label">Visited</span><span class="value">${bot.lootVisited || 0}</span></div>`;
+
+  if (bot.lootItems && bot.lootItems.length > 0) {
+    html += `<div class="loot-memory-list">`;
+    bot.lootItems.forEach(item => {
+      html += `<div class="loot-memory-item">T${item.t} ${friendlyName(item.ref, ITEM_NAMES)}</div>`;
+    });
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  // Traverse card (only if active)
+  if (bot.travPhase) {
+    html += `<div class="debug-card">
+      <h4>Traversal</h4>
+      <div class="debug-row"><span class="label">Phase</span><span class="value">${bot.travPhase}</span></div>
+      ${bot.travType ? `<div class="debug-row"><span class="label">Type</span><span class="value">${bot.travType}</span></div>` : ""}
+    </div>`;
+  }
+
+  // Position card
+  if (bot.pos) {
+    html += `<div class="debug-card">
+      <h4>Position</h4>
+      <div class="debug-row"><span class="value">${bot.pos[0]}, ${bot.pos[1]}, ${bot.pos[2]}</span></div>
+    </div>`;
+  }
+
+  panel.innerHTML = html;
 }
 
 function esc(str) {

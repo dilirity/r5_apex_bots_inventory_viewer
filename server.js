@@ -20,11 +20,14 @@ let rconConnected = false;
 let pollTimer = null;
 let browserClients = new Set();
 let latestData = null;
+let latestDebug = null;
 
 // Collect multi-line console output from the inventory dump command.
 // Lines matching our JSON marker are buffered and parsed.
 let collectingJson = false;
 let jsonLines = [];
+let collectingDebug = false;
+let debugLines = [];
 
 // --- HTTP server (serves static frontend) ---
 const MIME_TYPES = {
@@ -61,6 +64,9 @@ wss.on("connection", (ws) => {
   // Send latest snapshot immediately
   if (latestData) {
     ws.send(JSON.stringify({ type: "inventory", data: latestData }));
+  }
+  if (latestDebug) {
+    ws.send(JSON.stringify({ type: "debug", data: latestDebug }));
   }
   ws.send(
     JSON.stringify({
@@ -125,7 +131,41 @@ function tryParseInventory(str) {
     broadcast({ type: "inventory", data });
   } catch (e) {
     console.error("[parse] Failed to parse inventory JSON:", e.message);
-    console.error("[parse] Raw:", str.substring(0, 200));
+  }
+}
+
+function parseDebugLine(line) {
+  if (line.includes("##BOTDBG_START##")) {
+    collectingDebug = true;
+    debugLines = [];
+    const startIdx = line.indexOf("##BOTDBG_START##");
+    const endIdx = line.indexOf("##BOTDBG_END##");
+    if (endIdx > startIdx) {
+      tryParseDebug(line.substring(startIdx + 16, endIdx));
+      collectingDebug = false;
+    }
+    return;
+  }
+  if (collectingDebug) {
+    if (line.includes("##BOTDBG_END##")) {
+      const endIdx = line.indexOf("##BOTDBG_END##");
+      if (endIdx > 0) debugLines.push(line.substring(0, endIdx));
+      tryParseDebug(debugLines.join(""));
+      collectingDebug = false;
+      debugLines = [];
+    } else {
+      debugLines.push(line);
+    }
+  }
+}
+
+function tryParseDebug(str) {
+  try {
+    const data = JSON.parse(str.trim());
+    latestDebug = data;
+    broadcast({ type: "debug", data });
+  } catch (e) {
+    console.error("[parse] Failed to parse debug JSON:", e.message);
   }
 }
 
@@ -149,14 +189,10 @@ async function connectRcon() {
   });
 
   rcon.on("consolelog", (msg) => {
-    // Log raw messages that contain our markers for debugging
-    if (msg.includes("BOTINV") || collectingJson) {
-      console.log("[rcon:raw]", JSON.stringify(msg).substring(0, 200));
-    }
-    // Process each line for inventory markers
     const lines = msg.split("\n");
     for (const line of lines) {
       parseInventoryLine(line);
+      parseDebugLine(line);
     }
   });
 
@@ -191,6 +227,7 @@ function startPolling() {
   pollTimer = setInterval(() => {
     if (rcon && rcon.authenticated) {
       rcon.exec("script bot_inventory_json()");
+      rcon.exec("script bot_debug_json()");
     }
   }, POLL_INTERVAL);
 }

@@ -233,15 +233,38 @@ The web UI supports dropping items from a bot's inventory back into the game wor
 4. Game-side `bot_drop_item(botIdx, ref, count)` calls `SURVIVAL_DropBackpackItem(bot, ref, count)`
 5. Item is removed from bot's inventory and spawned as a loot entity on the ground
 
-### Drop behavior
-- **Consumables/attachments**: right-click drops 1 unit
-- **Ammo**: right-click drops one sub-stack (`countPerDrop` units, e.g., 18 energy ammo)
+### What can be dropped
+- **Backpack items**: right-click an inventory slot. Drops 1 unit for consumables/attachments, or one sub-stack for ammo (`countPerDrop` units).
+- **Weapons**: right-click the weapon icon in a weapon card. Drops the weapon with all its attachments.
+- **Weapon attachments**: right-click an attachment slot on a weapon card. Removes just that attachment and drops it.
+- **Equipment**: right-click an equipment slot (armor, helmet, backpack, KD shield). Drops the equipment piece.
 
-### Game-side function (`_botai_debug.nut`)
+### Game-side functions (`_botai_debug.nut`)
+
 ```squirrel
+// Drop backpack item
 void function bot_drop_item( int botIdx, string ref, int count = 1 )
+// Uses: SURVIVAL_DropBackpackItem (global, survival_loot.gnut)
+
+// Drop weapon (weaponIdx: 0 or 1)
+void function bot_drop_weapon( int botIdx, int weaponIdx )
+// Uses: SURVIVAL_DropMainWeapon (global, survival_loot.gnut)
+// Equipment slot refs: "main_weapon0", "main_weapon1"
+
+// Drop equipment (slotName: "armor", "helmet", "backpack", "incapshield")
+void function bot_drop_equip( int botIdx, string slotName )
+// Uses: SpawnGenericLoot + Inventory_SetPlayerEquipment (globals)
+
+// Drop weapon attachment (weaponIdx: 0 or 1)
+void function bot_drop_mod( int botIdx, int weaponIdx, string modRef )
+// Uses: EquipAttachments_Internal (global, survival_loot.gnut)
+// Called with modToAdd="", modToRemove=modRef to remove and drop to ground
 ```
-Uses `SURVIVAL_DropBackpackItem(player, item, dropCount)` from `survival_loot.gnut` (server-side global function).
+
+### Equipment slot refs (from `sh_survival_equipment_slot.gnut`)
+- Equipment: `"armor"`, `"helmet"`, `"backpack"`, `"incapshield"`
+- Weapons: `"main_weapon0"`, `"main_weapon1"`
+- Weapon sub-slots: `"main_weapon0_sight"`, `"main_weapon0_mag"`, `"main_weapon0_grip"`, `"main_weapon0_barrel"`, `"main_weapon0_hopup"` (same pattern for weapon1)
 
 ## Environment variables
 

@@ -222,6 +222,27 @@ SVG icons from the Apex wiki, normalized to white fills. Stored in `public/icons
 
 Tiered items (attachments in backpack/weapon slots, equipment) get a `tier-icon-N` CSS class. Currently these are empty (SVGs are already white). If SVGs were dark, you'd add `filter: invert(100%) hue-rotate(180deg)` as the base, then sepia/saturate/hue-rotate for tier coloring.
 
+## Item dropping
+
+The web UI supports dropping items from a bot's inventory back into the game world.
+
+### Flow
+1. **Right-click** an inventory slot in the browser
+2. Frontend sends WebSocket message: `{type: "exec", command: "script bot_drop_item(0, \"health_pickup_combo_small\", 1)"}`
+3. Server forwards as RCON `EXECCOMMAND`
+4. Game-side `bot_drop_item(botIdx, ref, count)` calls `SURVIVAL_DropBackpackItem(bot, ref, count)`
+5. Item is removed from bot's inventory and spawned as a loot entity on the ground
+
+### Drop behavior
+- **Consumables/attachments**: right-click drops 1 unit
+- **Ammo**: right-click drops one sub-stack (`countPerDrop` units, e.g., 18 energy ammo)
+
+### Game-side function (`_botai_debug.nut`)
+```squirrel
+void function bot_drop_item( int botIdx, string ref, int count = 1 )
+```
+Uses `SURVIVAL_DropBackpackItem(player, item, dropCount)` from `survival_loot.gnut` (server-side global function).
+
 ## Environment variables
 
 | Variable | Default | Description |

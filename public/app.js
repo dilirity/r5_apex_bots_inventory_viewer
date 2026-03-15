@@ -197,7 +197,18 @@ function renderPlayerList() {
   inventoryData.players.forEach((p, i) => {
     const li = document.createElement("li");
     li.className = selectedPlayer === i ? "selected" : "";
-    li.innerHTML = `${esc(p.name)}<span class="player-hp">HP ${p.hp}/${p.hpMax} | SH ${p.shields}/${p.shieldsMax}</span>`;
+    const legendRef = (p.legend || "").replace(/^character_/, "").replace(/\s+/g, "_").toLowerCase();
+    const avatarSrc = legendRef ? `icons/legends/${legendRef}.png` : "";
+    const avatarImg = avatarSrc
+      ? `<img class="player-avatar" src="${avatarSrc}" onerror="this.style.display='none'">`
+      : `<div class="player-avatar"></div>`;
+    li.innerHTML = `${avatarImg}<div class="player-info">
+      <div class="player-name-row">
+        <span class="player-name-text">${esc(p.name)}</span>
+        <span class="player-team">T${p.team || "?"}</span>
+      </div>
+      <div class="player-hp">HP ${p.hp}/${p.hpMax} | SH ${p.shields}/${p.shieldsMax}</div>
+    </div>`;
     li.onclick = () => { selectedPlayer = i; renderPlayerList(); renderDetail(); };
     playersEl.appendChild(li);
   });
@@ -219,7 +230,10 @@ function renderDetail() {
   detailEl.classList.remove("hidden");
 
   const p = inventoryData.players[selectedPlayer];
-  document.getElementById("player-name").textContent = p.name;
+  const legendDisplay = (p.legend || "").replace(/^character_/, "");
+  const legendInfo = legendDisplay ? `${legendDisplay} — Team ${p.team || "?"}` : `Team ${p.team || "?"}`;
+  document.getElementById("player-name").textContent = `${p.name}`;
+  document.getElementById("player-legend").textContent = legendInfo;
 
   // Vitals
   const hpPct = p.hpMax > 0 ? (p.hp / p.hpMax) * 100 : 0;
@@ -228,6 +242,16 @@ function renderDetail() {
   const shPct = p.shieldsMax > 0 ? (p.shields / p.shieldsMax) * 100 : 0;
   document.getElementById("shield-bar").style.width = shPct + "%";
   document.getElementById("shield-text").textContent = `${p.shields} / ${p.shieldsMax}`;
+
+  // Abilities
+  const tac = p.tac || [0, 0];
+  const ult = p.ult || [0, 0];
+  const tacPct = tac[1] > 0 ? (tac[0] / tac[1]) * 100 : 0;
+  const ultPct = ult[1] > 0 ? (ult[0] / ult[1]) * 100 : 0;
+  document.getElementById("tac-bar").style.width = tacPct + "%";
+  document.getElementById("tac-text").textContent = `${tac[0]} / ${tac[1]}`;
+  document.getElementById("ult-bar").style.width = ultPct + "%";
+  document.getElementById("ult-text").textContent = `${ult[0]} / ${ult[1]}`;
 
   // Equipment slots
   renderEquipSlot("slot-armor", p.armorTier, "icons/equipment/body_shield.svg", "armor");

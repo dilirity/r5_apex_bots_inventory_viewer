@@ -24,8 +24,9 @@
       </div>
       <div id="player-detail" class="hidden">
         <h2 id="player-name"></h2>
+        <div id="player-legend" class="player-legend-info"></div>
 
-        <!-- Top row: vitals + equipment -->
+        <!-- Vitals + abilities -->
         <section class="vitals">
           <div class="bar-group">
             <label>HP</label>
@@ -36,6 +37,16 @@
             <label>Shields</label>
             <div class="bar-container"><div id="shield-bar" class="bar shield"></div></div>
             <span id="shield-text"></span>
+          </div>
+          <div class="bar-group">
+            <label>Tactical</label>
+            <div class="bar-container"><div id="tac-bar" class="bar tactical"></div></div>
+            <span id="tac-text"></span>
+          </div>
+          <div class="bar-group">
+            <label>Ultimate</label>
+            <div class="bar-container"><div id="ult-bar" class="bar ultimate"></div></div>
+            <span id="ult-text"></span>
           </div>
         </section>
 

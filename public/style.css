@@ -67,8 +67,8 @@ header h1 { font-size: 15px; font-weight: 600; color: #e94560; }
 
 /* --- Player list sidebar --- */
 aside#player-list {
-  width: 200px;
-  min-width: 200px;
+  width: 230px;
+  min-width: 230px;
   background: var(--bg-panel);
   border-right: 1px solid var(--border);
   overflow-y: auto;
@@ -82,11 +82,14 @@ aside h2 {
 }
 #players { list-style: none; }
 #players li {
-  padding: 8px 14px;
+  padding: 6px 10px;
   cursor: pointer;
   border-left: 3px solid transparent;
   font-size: 13px;
   transition: all 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 #players li:hover { background: var(--bg-slot); }
 #players li.selected {
@@ -94,11 +97,50 @@ aside h2 {
   border-left-color: #e94560;
   color: #fff;
 }
-#players li .player-hp {
-  display: block;
+#players li .player-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--bg-slot);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+#players li .player-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+#players li .player-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+#players li .player-name-text {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#players li .player-team {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-dim);
+  flex-shrink: 0;
+  font-weight: 600;
+}
+#players li .player-legend {
   font-size: 10px;
   color: var(--text-muted);
-  margin-top: 2px;
+  text-transform: capitalize;
+}
+#players li .player-hp {
+  font-size: 9px;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 /* --- Main detail area --- */
@@ -119,8 +161,20 @@ main#detail {
 
 #player-name {
   font-size: 18px;
-  margin-bottom: 12px;
+  margin-bottom: 2px;
   color: #fff;
+}
+.player-legend-info {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  text-transform: capitalize;
+}
+.player-legend {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 4px;
+  text-transform: capitalize;
 }
 
 /* --- Vitals bars --- */
@@ -152,6 +206,8 @@ main#detail {
 }
 .bar.hp { background: linear-gradient(90deg, #dc2626, #ef4444); }
 .bar.shield { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.bar.tactical { background: linear-gradient(90deg, #16a34a, #4ade80); }
+.bar.ultimate { background: linear-gradient(90deg, #d97706, #fbbf24); }
 .bar-group span {
   font-size: 12px;
   font-variant-numeric: tabular-nums;

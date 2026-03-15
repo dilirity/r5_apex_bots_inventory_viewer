@@ -177,41 +177,102 @@ main#detail {
   text-transform: capitalize;
 }
 
-/* --- Vitals bars --- */
+/* --- Vitals --- */
 .vitals { margin-bottom: 16px; }
-.bar-group {
+
+/* Shield pips on top of HP bar */
+.hp-shield-stack {
+  margin-bottom: 8px;
+  max-width: 300px;
+}
+.shield-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 }
-.bar-group label {
-  width: 50px;
-  font-size: 11px;
+.shield-pips {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  max-width: 300px;
+}
+.shield-pip {
+  flex: 1;
+  height: 12px;
+  border-radius: 2px;
+  transition: opacity 0.3s;
+}
+.shield-pip.empty {
+  background: rgba(255,255,255,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.shield-pip-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+}
+/* Shield pip colors by armor tier */
+.shield-pip.t0, .shield-pip-fill.t0 { background: #555; }
+.shield-pip.t1, .shield-pip-fill.t1 { background: #9ca3af; }
+.shield-pip.t2, .shield-pip-fill.t2 { background: #60a5fa; }
+.shield-pip.t3, .shield-pip-fill.t3 { background: #a78bfa; }
+.shield-pip.t4, .shield-pip-fill.t4 { background: #fbbf24; }
+.vital-text {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
   color: var(--text-dim);
-  text-align: right;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.hp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .bar-container {
   flex: 1;
-  max-width: 250px;
   height: 18px;
-  background: #1c2333;
+  background: rgba(255,255,255,0.06);
   border-radius: 3px;
   overflow: hidden;
 }
+.hp-container { max-width: 300px; }
 .bar {
   height: 100%;
   transition: width 0.3s ease;
   border-radius: 3px;
 }
-.bar.hp { background: linear-gradient(90deg, #dc2626, #ef4444); }
-.bar.shield { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.bar.hp { background: linear-gradient(90deg, #d4d4d4, #e8e8e8); }
 .bar.tactical { background: linear-gradient(90deg, #16a34a, #4ade80); }
-.bar.ultimate { background: linear-gradient(90deg, #d97706, #fbbf24); }
-.bar-group span {
-  font-size: 12px;
+.bar.ultimate { background: linear-gradient(90deg, #dc2626, #ef4444); }
+
+/* Abilities side by side */
+.ability-row {
+  display: flex;
+  gap: 16px;
+}
+.ability-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ability-group label {
+  font-size: 10px;
+  color: var(--text-dim);
+  min-width: 45px;
+  text-align: right;
+}
+.ability-group .bar-container {
+  width: 120px;
+  height: 14px;
+}
+.ability-group span {
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
-  min-width: 60px;
   color: var(--text-dim);
 }
 

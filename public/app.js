@@ -235,13 +235,34 @@ function renderDetail() {
   document.getElementById("player-name").textContent = `${p.name}`;
   document.getElementById("player-legend").textContent = legendInfo;
 
-  // Vitals
+  // HP bar
   const hpPct = p.hpMax > 0 ? (p.hp / p.hpMax) * 100 : 0;
   document.getElementById("hp-bar").style.width = hpPct + "%";
   document.getElementById("hp-text").textContent = `${p.hp} / ${p.hpMax}`;
-  const shPct = p.shieldsMax > 0 ? (p.shields / p.shieldsMax) * 100 : 0;
-  document.getElementById("shield-bar").style.width = shPct + "%";
-  document.getElementById("shield-text").textContent = `${p.shields} / ${p.shieldsMax}`;
+
+  // Shield pips — each pip = 25 shield points, partially filled supported
+  const shieldPips = document.getElementById("shield-pips");
+  const shieldsMax = p.shieldsMax || 0;
+  const shieldsCur = p.shields || 0;
+  const totalPips = Math.ceil(shieldsMax / 25);
+  const tier = p.armorTier || 0;
+  let remaining = shieldsCur;
+  let pipsHtml = "";
+  for (let i = 0; i < totalPips; i++) {
+    const pipMax = Math.min(25, shieldsMax - i * 25);
+    const pipFill = Math.min(pipMax, Math.max(0, remaining));
+    remaining -= pipFill;
+    const pct = pipMax > 0 ? (pipFill / pipMax) * 100 : 0;
+    if (pct >= 100) {
+      pipsHtml += `<div class="shield-pip t${tier}"></div>`;
+    } else if (pct > 0) {
+      pipsHtml += `<div class="shield-pip empty"><div class="shield-pip-fill t${tier}" style="width:${pct}%"></div></div>`;
+    } else {
+      pipsHtml += `<div class="shield-pip empty"></div>`;
+    }
+  }
+  shieldPips.innerHTML = pipsHtml;
+  document.getElementById("shield-text").textContent = `${shieldsCur} / ${shieldsMax}`;
 
   // Abilities
   const tac = p.tac || [0, 0];

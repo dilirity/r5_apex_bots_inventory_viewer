@@ -26,27 +26,29 @@
         <h2 id="player-name"></h2>
         <div id="player-legend" class="player-legend-info"></div>
 
-        <!-- Vitals + abilities -->
+        <!-- Vitals: shields on top of HP, like in-game -->
         <section class="vitals">
-          <div class="bar-group">
-            <label>HP</label>
-            <div class="bar-container"><div id="hp-bar" class="bar hp"></div></div>
-            <span id="hp-text"></span>
+          <div class="hp-shield-stack">
+            <div class="shield-row">
+              <div id="shield-pips" class="shield-pips"></div>
+              <span id="shield-text" class="vital-text"></span>
+            </div>
+            <div class="hp-row">
+              <div class="bar-container hp-container"><div id="hp-bar" class="bar hp"></div></div>
+              <span id="hp-text" class="vital-text"></span>
+            </div>
           </div>
-          <div class="bar-group">
-            <label>Shields</label>
-            <div class="bar-container"><div id="shield-bar" class="bar shield"></div></div>
-            <span id="shield-text"></span>
-          </div>
-          <div class="bar-group">
-            <label>Tactical</label>
-            <div class="bar-container"><div id="tac-bar" class="bar tactical"></div></div>
-            <span id="tac-text"></span>
-          </div>
-          <div class="bar-group">
-            <label>Ultimate</label>
-            <div class="bar-container"><div id="ult-bar" class="bar ultimate"></div></div>
-            <span id="ult-text"></span>
+          <div class="ability-row">
+            <div class="ability-group">
+              <label>Tactical</label>
+              <div class="bar-container"><div id="tac-bar" class="bar tactical"></div></div>
+              <span id="tac-text"></span>
+            </div>
+            <div class="ability-group">
+              <label>Ultimate</label>
+              <div class="bar-container"><div id="ult-bar" class="bar ultimate"></div></div>
+              <span id="ult-text"></span>
+            </div>
           </div>
         </section>
 

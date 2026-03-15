@@ -203,6 +203,11 @@ function renderPlayerList() {
   });
 }
 
+function getSelectedBotIdx() {
+  if (selectedPlayer === null || !inventoryData?.players) return -1;
+  return inventoryData.players[selectedPlayer]?.botIdx ?? -1;
+}
+
 // --- Detail rendering ---
 function renderDetail() {
   if (!inventoryData?.players || selectedPlayer === null || selectedPlayer >= inventoryData.players.length) {
@@ -254,10 +259,11 @@ function renderEquipSlot(id, tier, icon, slotName) {
   // Right-click to drop equipment
   el.oncontextmenu = (e) => {
     e.preventDefault();
-    if (selectedPlayer === null || tier === 0) return;
+    const bi = getSelectedBotIdx();
+    if (bi < 0 || tier === 0) return;
     ws.send(JSON.stringify({
       type: "exec",
-      command: `script bot_drop_equip(${selectedPlayer}, "${slotName}")`
+      command: `script bot_drop_equip(${bi}, "${slotName}")`
     }));
   };
 }
@@ -291,10 +297,11 @@ function renderWeapon(id, w, slotNum) {
   // Right-click weapon icon to drop weapon
   iconArea.addEventListener("contextmenu", (e) => {
     e.preventDefault();
-    if (selectedPlayer === null) return;
+    const bi = getSelectedBotIdx();
+    if (bi < 0) return;
     ws.send(JSON.stringify({
       type: "exec",
-      command: `script bot_drop_weapon(${selectedPlayer}, ${weaponIdx})`
+      command: `script bot_drop_weapon(${bi}, ${weaponIdx})`
     }));
   });
 
@@ -316,10 +323,11 @@ function renderWeapon(id, w, slotNum) {
       s.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (selectedPlayer === null) return;
+        const bi = getSelectedBotIdx();
+        if (bi < 0) return;
         ws.send(JSON.stringify({
           type: "exec",
-          command: `script bot_drop_mod(${selectedPlayer}, ${weaponIdx}, "${mod.r}")`
+          command: `script bot_drop_mod(${bi}, ${weaponIdx}, "${mod.r}")`
         }));
       });
       modsEl.appendChild(s);
@@ -375,12 +383,13 @@ function buildInvCell(item) {
   // Right-click to drop one sub-stack
   cell.addEventListener("contextmenu", (e) => {
     e.preventDefault();
-    if (selectedPlayer === null) return;
+    const bi = getSelectedBotIdx();
+    if (bi < 0) return;
     const perDrop = item.d || item.c;
     const dropCount = isAmmo ? perDrop : 1;
     ws.send(JSON.stringify({
       type: "exec",
-      command: `script bot_drop_item(${selectedPlayer}, "${item.r}", ${dropCount})`
+      command: `script bot_drop_item(${bi}, "${item.r}", ${dropCount})`
     }));
   });
 

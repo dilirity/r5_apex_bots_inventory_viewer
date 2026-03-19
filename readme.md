@@ -1,6 +1,10 @@
 # Bot Inventory tracker
 
-## Preview
+## Preview (latest)
+
+<img width="1379" height="1105" alt="image" src="https://github.com/user-attachments/assets/f5f1175d-1c00-42d2-8b73-a9bdea96a190" />
+
+## Preview (older version)
 
 <img title="UI preview" alt="UI preview" src="preview.jpg">
 

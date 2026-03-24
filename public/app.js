@@ -551,6 +551,30 @@ function renderDebug() {
   }
   html += `</div>`;
 
+  // Players card
+  if (bot.playerMem !== undefined) {
+    const visE = bot.visEnemies || 0;
+    const visF = bot.visFriends || 0;
+    const mem = bot.playerMem || 0;
+    html += `<div class="debug-card">
+      <h4>Players</h4>
+      <div class="debug-row"><span class="label">Visible Enemies</span><span class="value" style="color:${visE > 0 ? '#ff4444' : 'inherit'}">${visE}</span></div>
+      <div class="debug-row"><span class="label">Visible Friends</span><span class="value" style="color:${visF > 0 ? '#44bb44' : 'inherit'}">${visF}</span></div>
+      <div class="debug-row"><span class="label">Memory</span><span class="value">${mem} players</span></div>`;
+
+    if (bot.playerList && bot.playerList.length > 0) {
+      html += `<div class="loot-memory-list">`;
+      bot.playerList.forEach(p => {
+        const icon = p.f ? "F" : "E";
+        const color = p.f ? "#44bb44" : "#ff4444";
+        const vis = p.v ? "visible" : "memory";
+        html += `<div class="loot-memory-item"><span style="color:${color}">[${icon}]</span> ${esc(p.n)} — ${p.d}u (${vis})</div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+
   // Traverse card (only if active)
   if (bot.travPhase) {
     html += `<div class="debug-card">

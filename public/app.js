@@ -525,8 +525,17 @@ function renderDebug() {
   // Scores card
   const lootScore = bot.lootScore || 0;
   const healScore = bot.healScore || 0;
+  const combatScore = bot.combatScore || 0;
+  let combatTargetName = "";
+  if (typeof bot.combatTarget === "number" && bot.playerList) {
+    const tgt = bot.playerList.find(p => p.ei === bot.combatTarget);
+    if (tgt) combatTargetName = tgt.n;
+  }
   html += `<div class="debug-card">
     <h4>Evaluation</h4>
+    <div class="debug-row"><span class="label">Combat Urgency</span><span class="value">${combatScore}</span></div>
+    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill combat" style="width:${combatScore * 100}%"></div></div></div>
+    ${combatTargetName ? `<div class="debug-row"><span class="label">Combat Target</span><span class="value">${esc(combatTargetName)}</span></div>` : ""}
     <div class="debug-row"><span class="label">Loot Urgency</span><span class="value">${lootScore}</span></div>
     <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill loot" style="width:${lootScore * 100}%"></div></div></div>
     <div class="debug-row"><span class="label">Heal Urgency</span><span class="value">${healScore}</span></div>
@@ -568,7 +577,9 @@ function renderDebug() {
         const icon = p.f ? "F" : "E";
         const color = p.f ? "#44bb44" : "#ff4444";
         const vis = p.v ? "visible" : "memory";
-        html += `<div class="loot-memory-item"><span style="color:${color}">[${icon}]</span> ${esc(p.n)} — ${p.d}u (${vis})</div>`;
+        const isTarget = typeof bot.combatTarget === "number" && p.ei === bot.combatTarget;
+        const targetSuffix = isTarget ? ` <span style="color:#fbbf24;font-weight:bold">← TARGET</span>` : "";
+        html += `<div class="loot-memory-item"><span style="color:${color}">[${icon}]</span> ${esc(p.n)} — ${p.d}u (${vis})${targetSuffix}</div>`;
       });
       html += `</div>`;
     }

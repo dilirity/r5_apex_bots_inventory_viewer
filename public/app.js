@@ -586,6 +586,29 @@ function renderDebug() {
     html += `</div>`;
   }
 
+  // Damage card
+  if (typeof bot.dmgLastHitTime === "number") {
+    const lastHit = bot.dmgLastHitTime;
+    const lastAttacker = bot.dmgLastAttacker;
+    const recentTotal = bot.dmgRecentTotal || 0;
+    const eventCount = bot.dmgEventCount || 0;
+    const hasRecent = eventCount > 0 || lastHit > 0;
+
+    let attackerName = "";
+    if (typeof lastAttacker === "number" && lastAttacker >= 0 && bot.playerList) {
+      const a = bot.playerList.find(p => p.ei === lastAttacker);
+      if (a) attackerName = a.n;
+    }
+
+    html += `<div class="debug-card">
+      <h4>Damage</h4>
+      <div class="debug-row"><span class="label">Recent Events</span><span class="value" style="color:${eventCount > 0 ? '#ff4444' : 'inherit'}">${eventCount}</span></div>
+      <div class="debug-row"><span class="label">Recent Total</span><span class="value">${recentTotal}</span></div>
+      ${hasRecent && attackerName ? `<div class="debug-row"><span class="label">Last Attacker</span><span class="value">${esc(attackerName)}</span></div>` : ""}
+      ${hasRecent && !attackerName && typeof lastAttacker === "number" && lastAttacker >= 0 ? `<div class="debug-row"><span class="label">Last Attacker</span><span class="value">#${lastAttacker}</span></div>` : ""}
+    </div>`;
+  }
+
   // Traverse card (only if active)
   if (bot.travPhase) {
     html += `<div class="debug-card">

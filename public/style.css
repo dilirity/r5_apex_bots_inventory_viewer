@@ -611,6 +611,7 @@ main#detail {
 .score-bar-fill.loot { background: #60a5fa; }
 .score-bar-fill.heal { background: #f87171; }
 .score-bar-fill.combat { background: #fbbf24; }
+.score-bar-fill.disengage { background: #ef4444; }
 
 .loot-memory-list {
   margin-top: 4px;

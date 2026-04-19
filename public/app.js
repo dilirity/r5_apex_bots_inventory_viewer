@@ -526,15 +526,25 @@ function renderDebug() {
   const lootScore = bot.lootScore || 0;
   const healScore = bot.healScore || 0;
   const combatScore = bot.combatScore || 0;
+  const combatVisible = bot.combatVisible === 1;
+  const disengageScore = bot.disengageScore || 0;
+  const disengageReason = bot.disengageReason || "";
   let combatTargetName = "";
   if (typeof bot.combatTarget === "number" && bot.playerList) {
     const tgt = bot.playerList.find(p => p.ei === bot.combatTarget);
     if (tgt) combatTargetName = tgt.n;
   }
+  const combatModeLabel = combatScore > 0
+    ? (combatVisible ? "Firing" : "Tracking (unseen)")
+    : "Idle";
   html += `<div class="debug-card">
     <h4>Evaluation</h4>
+    <div class="debug-row"><span class="label">Disengage</span><span class="value" style="color:${disengageScore > 0 ? '#ef4444' : 'inherit'};font-weight:${disengageScore > 0 ? 'bold' : 'normal'}">${disengageScore}${disengageReason ? ' — ' + esc(disengageReason) : ''}</span></div>
+    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill disengage" style="width:${disengageScore * 100}%"></div></div></div>
     <div class="debug-row"><span class="label">Combat Urgency</span><span class="value">${combatScore}</span></div>
     <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill combat" style="width:${combatScore * 100}%"></div></div></div>
+    <div class="debug-row"><span class="label">Combat Mode</span><span class="value" style="color:${combatVisible ? '#fbbf24' : '#f97316'}">${combatModeLabel}</span></div>
+    ${bot.combatStance ? `<div class="debug-row"><span class="label">Combat Stance</span><span class="value">${esc(bot.combatStance)}</span></div>` : ""}
     ${combatTargetName ? `<div class="debug-row"><span class="label">Combat Target</span><span class="value">${esc(combatTargetName)}</span></div>` : ""}
     <div class="debug-row"><span class="label">Loot Urgency</span><span class="value">${lootScore}</span></div>
     <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill loot" style="width:${lootScore * 100}%"></div></div></div>
@@ -578,7 +588,14 @@ function renderDebug() {
         const color = p.f ? "#44bb44" : "#ff4444";
         const vis = p.v ? "visible" : "memory";
         const isTarget = typeof bot.combatTarget === "number" && p.ei === bot.combatTarget;
-        const targetSuffix = isTarget ? ` <span style="color:#fbbf24;font-weight:bold">← TARGET</span>` : "";
+        let targetSuffix = "";
+        if (isTarget) {
+          if (bot.combatVisible === 1) {
+            targetSuffix = ` <span style="color:#fbbf24;font-weight:bold">← TARGET</span>`;
+          } else {
+            targetSuffix = ` <span style="color:#f97316;font-weight:bold">← TRACKING</span>`;
+          }
+        }
         html += `<div class="loot-memory-item"><span style="color:${color}">[${icon}]</span> ${esc(p.n)} — ${p.d}u (${vis})${targetSuffix}</div>`;
       });
       html += `</div>`;

@@ -547,6 +547,8 @@ function renderDebug() {
     ${bot.combatStance ? `<div class="debug-row"><span class="label">Combat Stance</span><span class="value">${esc(bot.combatStance)}</span></div>` : ""}
     ${bot.combatReason ? `<div class="debug-row"><span class="label">Combat Reason</span><span class="value">${esc(bot.combatReason)}</span></div>` : ""}
     ${typeof bot.combatDealtToTarget === "number" ? `<div class="debug-row"><span class="label">Dealt to Target</span><span class="value">${bot.combatDealtToTarget}</span></div>` : ""}
+    ${typeof bot.combatTheySeeMe === "number" ? `<div class="debug-row"><span class="label">They See Me</span><span class="value">${bot.combatTheySeeMe ? "yes" : "no"}</span></div>` : ""}
+    ${typeof bot.takingDamage === "number" ? `<div class="debug-row"><span class="label">Taking Damage</span><span class="value">${bot.takingDamage ? "yes" : "no"}</span></div>` : ""}
     ${combatTargetName ? `<div class="debug-row"><span class="label">Combat Target</span><span class="value">${esc(combatTargetName)}</span></div>` : ""}
     <div class="debug-row"><span class="label">Loot Urgency</span><span class="value">${lootScore}</span></div>
     <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill loot" style="width:${lootScore * 100}%"></div></div></div>

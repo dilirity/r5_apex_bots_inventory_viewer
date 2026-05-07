@@ -647,6 +647,33 @@ function renderDebug() {
     </div>`;
   }
 
+  // Ring card — global ring state + this bot's perception
+  const ring = debugData.ring;
+  if (ring) {
+    const shrinking = ring.shrk === 1;
+    const timeRemaining = shrinking ? Math.max(0, ring.endT - ring.now) : null;
+    const inSafe = bot.inSafe === 1;
+    const distSafe = typeof bot.distSafe === "number" ? bot.distSafe : null;
+    const rotateScore = typeof bot.rotateScore === "number" ? bot.rotateScore : 0;
+
+    const hasTarget = bot.hasTarget === 1;
+    const tp = Array.isArray(bot.targetPos) ? bot.targetPos : null;
+
+    html += `<div class="debug-card">
+      <h4>Ring</h4>
+      <div class="debug-row"><span class="label">Stage</span><span class="value">${ring.stage}</span></div>
+      <div class="debug-row"><span class="label">Shrinking</span><span class="value" style="color:${shrinking ? '#ef4444' : 'inherit'};font-weight:${shrinking ? 'bold' : 'normal'}">${shrinking ? "yes" : "no"}</span></div>
+      ${timeRemaining !== null ? `<div class="debug-row"><span class="label">Time Remaining</span><span class="value">${timeRemaining.toFixed(1)}s</span></div>` : ""}
+      <div class="debug-row"><span class="label">Safe Radius</span><span class="value">${ring.safeR}</span></div>
+      <div class="debug-row"><span class="label">In Safe Zone</span><span class="value" style="color:${inSafe ? '#44bb44' : '#ef4444'}">${inSafe ? "yes" : "no"}</span></div>
+      ${distSafe !== null ? `<div class="debug-row"><span class="label">Dist to Safe</span><span class="value">${distSafe}</span></div>` : ""}
+      <div class="debug-row"><span class="label">Rotate Score</span><span class="value">${rotateScore.toFixed(2)}</span></div>
+      <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill loot" style="width:${rotateScore * 100}%"></div></div></div>
+      <div class="debug-row"><span class="label">Has Target</span><span class="value" style="color:${hasTarget ? '#44bb44' : '#ef4444'}">${hasTarget ? "yes" : "no"}</span></div>
+      ${tp ? `<div class="debug-row"><span class="label">Target Pos</span><span class="value">[${tp[0]}, ${tp[1]}, ${tp[2]}]</span></div>` : ""}
+    </div>`;
+  }
+
   panel.innerHTML = html;
 }
 

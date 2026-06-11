@@ -513,164 +513,219 @@ function renderDebug() {
 
   let html = "";
 
-  // Brain & Task card
+  // Translates the protocol-level lastSwitchReason from the brain into
+  // plain English. Falls back to the raw string if unrecognized.
+  function readableReason(raw) {
+    if (!raw) return "";
+    const m = raw.match(/^([a-z_]+):(.+)$/i);
+    if (!m) return raw;
+    const event = m[1];
+    const rest = m[2];
+    if (event === "start") return `started`;
+    if (event === "preempt") {
+      const [from, to] = rest.split("→");
+      return to ? `took over from ${from}` : `preempted by ${from}`;
+    }
+    if (event === "complete") return `${rest} completed`;
+    if (event === "failed") return `${rest} failed`;
+    if (event === "yield") return `${rest} yielded`;
+    return raw;
+  }
+
+  // ===========================================
+  // 1. Brain — what / why / could-switch-to.
+  // ===========================================
+  // While a task is running, the last recorded transition is its start, so
+  // lastSwitchAge doubles as the current task's age.
+  const ageStr = typeof bot.lastSwitchAge === "number" && bot.intent
+    ? ` <span class="muted">(${bot.lastSwitchAge.toFixed(0)}s)</span>`
+    : "";
+  const elig = Array.isArray(bot.eligible) ? bot.eligible : [];
+  const currentTask = bot.intent || "HOLD";
+  const otherEligible = elig.filter(t => t !== currentTask);
+  const reasonHuman = readableReason(bot.lastSwitch || "");
+  const swPerMin = typeof bot.swPerMin === "number" ? bot.swPerMin : null;
+  const swCount = typeof bot.swCount === "number" ? bot.swCount : 0;
   html += `<div class="debug-card">
     <h4>Brain</h4>
-    <div class="debug-row"><span class="label">Task</span><span class="value ${stateClass}">${bot.task || "?"}</span></div>
-    <div class="debug-row"><span class="label">Intent</span><span class="value">${bot.intent || "HOLD"}</span></div>
-    <div class="debug-row"><span class="label">Movement</span><span class="value">${bot.move || "?"}</span></div>
-    <div class="debug-row"><span class="label">Next Traverse</span><span class="value">${bot.nextTrav || "NONE"}</span></div>
-  </div>`;
+    <div class="debug-row"><span class="label">Doing</span><span class="value ${stateClass}">${currentTask}${ageStr}</span></div>
+    <div class="debug-row"><span class="label">Why</span><span class="value">${reasonHuman ? esc(reasonHuman) : `<span class="muted">—</span>`}</span></div>
+    ${swPerMin !== null ? `<div class="debug-row"><span class="label">Task Changes</span><span class="value" style="color:${swPerMin >= 10 ? '#ef4444' : 'inherit'}">${swPerMin}/min <span class="muted">(${swCount} changes, ${typeof bot.swRestarts === "number" ? bot.swRestarts : 0} restarts this life)</span></span></div>` : ""}
+    ${typeof bot.bailouts === "number" && bot.bailouts > 0 ? `<div class="debug-row"><span class="label">Safety Bailouts</span><span class="value" style="color:#ef4444;font-weight:bold">${bot.bailouts}</span></div>` : ""}
+    <div class="debug-row"><span class="label">Could also do</span><span class="value">${otherEligible.length ? otherEligible.join(", ") : `<span class="muted">(nothing else eligible)</span>`}</span></div>`;
 
-  // Scores card
-  const lootScore = bot.lootScore || 0;
-  const healScore = bot.healScore || 0;
-  const combatScore = bot.combatScore || 0;
-  const combatVisible = bot.combatVisible === 1;
-  const disengageScore = bot.disengageScore || 0;
-  const disengageReason = bot.disengageReason || "";
-  let combatTargetName = "";
-  if (typeof bot.combatTarget === "number" && bot.playerList) {
-    const tgt = bot.playerList.find(p => p.ei === bot.combatTarget);
-    if (tgt) combatTargetName = tgt.n;
-  }
-  const combatModeLabel = combatScore > 0
-    ? (combatVisible ? "Firing" : "Tracking (unseen)")
-    : "Idle";
-  html += `<div class="debug-card">
-    <h4>Evaluation</h4>
-    <div class="debug-row"><span class="label">Disengage</span><span class="value" style="color:${disengageScore > 0 ? '#ef4444' : 'inherit'};font-weight:${disengageScore > 0 ? 'bold' : 'normal'}">${disengageScore}${disengageReason ? ' — ' + esc(disengageReason) : ''}</span></div>
-    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill disengage" style="width:${disengageScore * 100}%"></div></div></div>
-    <div class="debug-row"><span class="label">Combat Urgency</span><span class="value">${combatScore}</span></div>
-    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill combat" style="width:${combatScore * 100}%"></div></div></div>
-    <div class="debug-row"><span class="label">Combat Mode</span><span class="value" style="color:${combatVisible ? '#fbbf24' : '#f97316'}">${combatModeLabel}</span></div>
-    ${bot.combatStance ? `<div class="debug-row"><span class="label">Combat Stance</span><span class="value">${esc(bot.combatStance)}</span></div>` : ""}
-    ${bot.combatReason ? `<div class="debug-row"><span class="label">Combat Reason</span><span class="value">${esc(bot.combatReason)}</span></div>` : ""}
-    ${typeof bot.combatDealtToTarget === "number" ? `<div class="debug-row"><span class="label">Dealt to Target</span><span class="value">${bot.combatDealtToTarget}</span></div>` : ""}
-    ${typeof bot.combatTheySeeMe === "number" ? `<div class="debug-row"><span class="label">They See Me</span><span class="value">${bot.combatTheySeeMe ? "yes" : "no"}</span></div>` : ""}
-    ${typeof bot.takingDamage === "number" ? `<div class="debug-row"><span class="label">Taking Damage</span><span class="value">${bot.takingDamage ? "yes" : "no"}</span></div>` : ""}
-    ${combatTargetName ? `<div class="debug-row"><span class="label">Combat Target</span><span class="value">${esc(combatTargetName)}</span></div>` : ""}
-    <div class="debug-row"><span class="label">Loot Urgency</span><span class="value">${lootScore}</span></div>
-    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill loot" style="width:${lootScore * 100}%"></div></div></div>
-    <div class="debug-row"><span class="label">Heal Urgency</span><span class="value">${healScore}</span></div>
-    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill heal" style="width:${healScore * 100}%"></div></div></div>
-    ${bot.healItem ? `<div class="debug-row"><span class="label">Heal Item</span><span class="value">${friendlyName(bot.healItem, ITEM_NAMES)}</span></div>` : ""}
-  </div>`;
-
-  // Loot State card
-  html += `<div class="debug-card">
-    <h4>Loot</h4>
-    <div class="debug-row"><span class="label">Phase</span><span class="value">${LOOT_PHASE_NAMES[bot.lootPhase] || bot.lootPhase || "Idle"}</span></div>
-    ${bot.lootEntIdx >= 0 ? `<div class="debug-row"><span class="label">Target</span><span class="value">#${bot.lootEntIdx}</span></div>` : ""}
-    <div class="debug-row"><span class="label">Memory</span><span class="value">${bot.lootMemory || 0} items</span></div>
-    <div class="debug-row"><span class="label">Visited</span><span class="value">${bot.lootVisited || 0}</span></div>`;
-
-  if (bot.lootItems && bot.lootItems.length > 0) {
+  // Recent transitions, newest first. Entry times are game-clock seconds;
+  // ring.now is the same clock, emitted in every debug payload.
+  const swHist = Array.isArray(bot.swHist) ? bot.swHist : [];
+  if (swHist.length) {
+    const gameNow = debugData.ring && typeof debugData.ring.now === "number" ? debugData.ring.now : null;
     html += `<div class="loot-memory-list">`;
-    bot.lootItems.forEach(item => {
-      html += `<div class="loot-memory-item">T${item.t} ${friendlyName(item.ref, ITEM_NAMES)}</div>`;
+    [...swHist].reverse().forEach(h => {
+      const age = gameNow !== null ? `${Math.max(0, gameNow - h.t).toFixed(1)}s ago` : `t=${h.t}`;
+      html += `<div class="loot-memory-item"><span class="muted">${age}</span> — ${esc(h.r)}</div>`;
     });
     html += `</div>`;
   }
   html += `</div>`;
 
-  // Players card
-  if (bot.playerMem !== undefined) {
-    const visE = bot.visEnemies || 0;
-    const visF = bot.visFriends || 0;
-    const mem = bot.playerMem || 0;
-    html += `<div class="debug-card">
-      <h4>Players</h4>
-      <div class="debug-row"><span class="label">Visible Enemies</span><span class="value" style="color:${visE > 0 ? '#ff4444' : 'inherit'}">${visE}</span></div>
-      <div class="debug-row"><span class="label">Visible Friends</span><span class="value" style="color:${visF > 0 ? '#44bb44' : 'inherit'}">${visF}</span></div>
-      <div class="debug-row"><span class="label">Memory</span><span class="value">${mem} players</span></div>`;
-
-    if (bot.playerList && bot.playerList.length > 0) {
-      html += `<div class="loot-memory-list">`;
-      bot.playerList.forEach(p => {
-        const icon = p.f ? "F" : "E";
-        const color = p.f ? "#44bb44" : "#ff4444";
-        const vis = p.v ? "visible" : "memory";
-        const isTarget = typeof bot.combatTarget === "number" && p.ei === bot.combatTarget;
-        let targetSuffix = "";
-        if (isTarget) {
-          if (bot.combatVisible === 1) {
-            targetSuffix = ` <span style="color:#fbbf24;font-weight:bold">← TARGET</span>`;
-          } else {
-            targetSuffix = ` <span style="color:#f97316;font-weight:bold">← TRACKING</span>`;
-          }
-        }
-        html += `<div class="loot-memory-item"><span style="color:${color}">[${icon}]</span> ${esc(p.n)} — ${p.d}u (${vis})${targetSuffix}</div>`;
-      });
-      html += `</div>`;
+  // ===========================================
+  // 2. Active Task — all internals for the running task (combat stance/target/
+  //    reason/dealt/theySeeMe/takingDamage live HERE, not in Eval Signals).
+  //    Hidden in HOLD by design — the card disappearing IS the signal.
+  // ===========================================
+  let activeRows = "";
+  if (currentTask === "COMBAT") {
+    let targetName = "";
+    if (typeof bot.combatTarget === "number" && bot.playerList) {
+      const tgt = bot.playerList.find(p => p.ei === bot.combatTarget);
+      if (tgt) targetName = tgt.n;
     }
+    const combatVisible = bot.combatVisible === 1;
+    activeRows = `
+      ${bot.combatStance ? `<div class="debug-row"><span class="label">Stance</span><span class="value">${esc(bot.combatStance)}</span></div>` : ""}
+      ${targetName ? `<div class="debug-row"><span class="label">Target</span><span class="value">${esc(targetName)}${combatVisible ? " (visible)" : " (tracking)"}</span></div>` : ""}
+      ${bot.combatReason ? `<div class="debug-row"><span class="label">Reason</span><span class="value">${esc(bot.combatReason)}</span></div>` : ""}
+      ${typeof bot.combatDealtToTarget === "number" ? `<div class="debug-row"><span class="label">Dealt to Target</span><span class="value">${bot.combatDealtToTarget}</span></div>` : ""}
+      ${typeof bot.combatTheySeeMe === "number" ? `<div class="debug-row"><span class="label">They See Me</span><span class="value">${bot.combatTheySeeMe ? "yes" : "no"}</span></div>` : ""}
+      ${typeof bot.takingDamage === "number" ? `<div class="debug-row"><span class="label">Taking Damage</span><span class="value">${bot.takingDamage ? "yes" : "no"}</span></div>` : ""}
+    `;
+  } else if (currentTask === "LOOT") {
+    activeRows = `
+      <div class="debug-row"><span class="label">Phase</span><span class="value">${LOOT_PHASE_NAMES[bot.lootPhase] || bot.lootPhase || "—"}</span></div>
+      ${bot.lootEntIdx >= 0 ? `<div class="debug-row"><span class="label">Target</span><span class="value">#${bot.lootEntIdx}</span></div>` : ""}
+      <div class="debug-row"><span class="label">Memory</span><span class="value">${bot.lootMemory || 0} items / ${bot.lootVisited || 0} visited</span></div>
+    `;
+  } else if (currentTask === "DISENGAGE") {
+    activeRows = `
+      ${bot.disengagePhase ? `<div class="debug-row"><span class="label">Phase</span><span class="value">${bot.disengagePhase}</span></div>` : ""}
+      ${Array.isArray(bot.disengageRetreat) ? `<div class="debug-row"><span class="label">Retreating to</span><span class="value">[${bot.disengageRetreat.join(", ")}]</span></div>` : ""}
+    `;
+  } else if (currentTask === "REVIVE") {
+    activeRows = bot.revivePhase ? `<div class="debug-row"><span class="label">Phase</span><span class="value">${bot.revivePhase}</span></div>` : "";
+  } else if (currentTask === "RESPAWN") {
+    activeRows = bot.respawnPhase ? `<div class="debug-row"><span class="label">Phase</span><span class="value">${bot.respawnPhase}</span></div>` : "";
+  } else if (currentTask === "RESPAWN_DELIVER") {
+    activeRows = bot.respawnDeliverPhase ? `<div class="debug-row"><span class="label">Phase</span><span class="value">${bot.respawnDeliverPhase}</span></div>` : "";
+  } else if (currentTask === "ROTATE") {
+    activeRows = bot.rotatePhase ? `<div class="debug-row"><span class="label">Phase</span><span class="value">${bot.rotatePhase}</span></div>` : "";
+  } else if (currentTask === "RESET") {
+    activeRows = bot.healItem ? `<div class="debug-row"><span class="label">Healing with</span><span class="value">${friendlyName(bot.healItem, ITEM_NAMES)}</span></div>` : "";
+  }
+  if (activeRows.trim()) {
+    html += `<div class="debug-card">
+      <h4>${currentTask}</h4>
+      ${activeRows}
+    </div>`;
+  }
+
+  // ===========================================
+  // 3. Eval Signals — ONLY the bars. Informational; under the task system the
+  //    brain selects via eligibility, not these scores. Useful for spotting
+  //    eval-layer bugs (e.g., combat eval says 0 when it should see a target).
+  // ===========================================
+  // Solo tasks emit validity/trigger facts (B3a); team tasks still emit scores
+  // until B3b strips them too.
+  const disengageOn = bot.disengageTriggered === 1;
+  const rotateOn = bot.rotateTriggered === 1;
+  const combatOn = typeof bot.combatTarget === "number" && bot.combatTarget >= 0;
+  const lootOn = bot.lootHasTarget === 1;
+  const healOn = !!bot.healAction;
+  const reviveScore = bot.reviveScore || 0;
+  const respawnScore = bot.respawnScore || 0;
+  const respawnDeliverScore = bot.respawnDeliverScore || 0;
+  const onOff = (on, detail) => on
+    ? `<span style="color:#fbbf24;font-weight:bold">YES</span>${detail ? ` <span class="muted">${esc(detail)}</span>` : ""}`
+    : `<span class="muted">no</span>`;
+  html += `<div class="debug-card">
+    <h4>Eval Signals</h4>
+    <div class="debug-row"><span class="label">Disengage</span><span class="value">${onOff(disengageOn, bot.disengageReason || "")}</span></div>
+    <div class="debug-row"><span class="label">Rotate</span><span class="value">${onOff(rotateOn, "")}</span></div>
+    <div class="debug-row"><span class="label">Combat target</span><span class="value">${onOff(combatOn, combatOn ? `#${bot.combatTarget}` : "")}</span></div>
+    <div class="debug-row"><span class="label">Loot target</span><span class="value">${onOff(lootOn, "")}</span></div>
+    <div class="debug-row"><span class="label">Heal</span><span class="value">${onOff(healOn, bot.healItem || "")}</span></div>
+    <div class="debug-row"><span class="label">Revive</span><span class="value">${reviveScore}</span></div>
+    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill heal" style="width:${reviveScore * 100}%"></div></div></div>
+    <div class="debug-row"><span class="label">Respawn</span><span class="value">${respawnScore}</span></div>
+    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill heal" style="width:${respawnScore * 100}%"></div></div></div>
+    <div class="debug-row"><span class="label">Respawn Deliver</span><span class="value">${respawnDeliverScore}</span></div>
+    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill heal" style="width:${respawnDeliverScore * 100}%"></div></div></div>
+  </div>`;
+
+  // ===========================================
+  // 4. Threats — what's around the bot that could hurt it: nearby players +
+  //    incoming damage. Combined card so you can correlate at a glance.
+  // ===========================================
+  const playerList = bot.playerList || [];
+  const lastAttacker = bot.dmgLastAttacker;
+  const recentTotal = bot.dmgRecentTotal || 0;
+  const eventCount = bot.dmgEventCount || 0;
+  let attackerName = "";
+  if (typeof lastAttacker === "number" && lastAttacker >= 0 && bot.playerList) {
+    const a = bot.playerList.find(p => p.ei === lastAttacker);
+    if (a) attackerName = a.n;
+  }
+  html += `<div class="debug-card">
+    <h4>Threats</h4>
+    <div class="debug-row"><span class="label">Recent Damage</span><span class="value" style="color:${eventCount > 0 ? '#ff4444' : 'inherit'}">${eventCount} events / ${recentTotal} total</span></div>
+    <div class="debug-row"><span class="label">Last Attacker</span><span class="value">${attackerName ? esc(attackerName) : (typeof lastAttacker === "number" && lastAttacker >= 0 ? `#${lastAttacker}` : `<span class="muted">(none)</span>`)}</span></div>`;
+  if (playerList.length > 0) {
+    html += `<div class="loot-memory-list">`;
+    playerList.forEach(p => {
+      const color = p.f ? "#44bb44" : "#ff4444";
+      const tag = p.f ? "F" : "E";
+      const vis = p.v ? "visible" : "memory";
+      const isTarget = typeof bot.combatTarget === "number" && p.ei === bot.combatTarget;
+      const targetSuffix = isTarget
+        ? (bot.combatVisible === 1
+            ? ` <span style="color:#fbbf24;font-weight:bold">← TARGET</span>`
+            : ` <span style="color:#f97316;font-weight:bold">← TRACKING</span>`)
+        : "";
+      html += `<div class="loot-memory-item"><span style="color:${color}">[${tag}]</span> ${esc(p.n)} — ${p.d}u (${vis})${targetSuffix}</div>`;
+    });
     html += `</div>`;
+  } else {
+    html += `<div class="debug-row"><span class="value muted">(no players in memory)</span></div>`;
   }
+  html += `</div>`;
 
-  // Damage card
-  if (typeof bot.dmgLastHitTime === "number") {
-    const lastHit = bot.dmgLastHitTime;
-    const lastAttacker = bot.dmgLastAttacker;
-    const recentTotal = bot.dmgRecentTotal || 0;
-    const eventCount = bot.dmgEventCount || 0;
-    const hasRecent = eventCount > 0 || lastHit > 0;
+  // ===========================================
+  // 5. Navigation — where the bot is currently walking + active traversal.
+  //    Always visible. "Has Target" / "Target Pos" used to live in Ring,
+  //    but they have nothing to do with the ring — they're nav state.
+  // ===========================================
+  const hasTarget = bot.hasTarget === 1;
+  const tp = Array.isArray(bot.targetPos) ? bot.targetPos : null;
+  html += `<div class="debug-card">
+    <h4>Navigation</h4>
+    <div class="debug-row"><span class="label">Has Target</span><span class="value" style="color:${hasTarget ? '#44bb44' : 'inherit'}">${hasTarget ? "yes" : "no"}</span></div>
+    <div class="debug-row"><span class="label">Target Pos</span><span class="value">${tp ? `[${tp[0]}, ${tp[1]}, ${tp[2]}]` : `<span class="muted">—</span>`}</span></div>
+    <div class="debug-row"><span class="label">Traverse</span><span class="value">${bot.travPhase ? `${bot.travPhase}${bot.travType ? ` (${bot.travType})` : ""}` : `<span class="muted">(inactive)</span>`}</span></div>
+  </div>`;
 
-    let attackerName = "";
-    if (typeof lastAttacker === "number" && lastAttacker >= 0 && bot.playerList) {
-      const a = bot.playerList.find(p => p.ei === lastAttacker);
-      if (a) attackerName = a.n;
-    }
-
-    html += `<div class="debug-card">
-      <h4>Damage</h4>
-      <div class="debug-row"><span class="label">Recent Events</span><span class="value" style="color:${eventCount > 0 ? '#ff4444' : 'inherit'}">${eventCount}</span></div>
-      <div class="debug-row"><span class="label">Recent Total</span><span class="value">${recentTotal}</span></div>
-      ${hasRecent && attackerName ? `<div class="debug-row"><span class="label">Last Attacker</span><span class="value">${esc(attackerName)}</span></div>` : ""}
-      ${hasRecent && !attackerName && typeof lastAttacker === "number" && lastAttacker >= 0 ? `<div class="debug-row"><span class="label">Last Attacker</span><span class="value">#${lastAttacker}</span></div>` : ""}
-    </div>`;
-  }
-
-  // Traverse card (only if active)
-  if (bot.travPhase) {
-    html += `<div class="debug-card">
-      <h4>Traversal</h4>
-      <div class="debug-row"><span class="label">Phase</span><span class="value">${bot.travPhase}</span></div>
-      ${bot.travType ? `<div class="debug-row"><span class="label">Type</span><span class="value">${bot.travType}</span></div>` : ""}
-    </div>`;
-  }
-
-  // Position card
-  if (bot.pos) {
-    html += `<div class="debug-card">
-      <h4>Position</h4>
-      <div class="debug-row"><span class="value">${bot.pos[0]}, ${bot.pos[1]}, ${bot.pos[2]}</span></div>
-    </div>`;
-  }
-
-  // Ring card — global ring state + this bot's perception
+  // ===========================================
+  // 6. Environment — bot position + ring state. Always visible.
+  // ===========================================
   const ring = debugData.ring;
+  const pos = bot.pos;
+  let envRows = "";
+  if (pos) {
+    envRows += `<div class="debug-row"><span class="label">Position</span><span class="value">${pos[0]}, ${pos[1]}, ${pos[2]}</span></div>`;
+  }
   if (ring) {
     const shrinking = ring.shrk === 1;
     const timeRemaining = shrinking ? Math.max(0, ring.endT - ring.now) : null;
     const inSafe = bot.inSafe === 1;
     const distSafe = typeof bot.distSafe === "number" ? bot.distSafe : null;
-    const rotateScore = typeof bot.rotateScore === "number" ? bot.rotateScore : 0;
-
-    const hasTarget = bot.hasTarget === 1;
-    const tp = Array.isArray(bot.targetPos) ? bot.targetPos : null;
-
-    html += `<div class="debug-card">
-      <h4>Ring</h4>
-      <div class="debug-row"><span class="label">Stage</span><span class="value">${ring.stage}</span></div>
-      <div class="debug-row"><span class="label">Shrinking</span><span class="value" style="color:${shrinking ? '#ef4444' : 'inherit'};font-weight:${shrinking ? 'bold' : 'normal'}">${shrinking ? "yes" : "no"}</span></div>
-      ${timeRemaining !== null ? `<div class="debug-row"><span class="label">Time Remaining</span><span class="value">${timeRemaining.toFixed(1)}s</span></div>` : ""}
+    envRows += `
+      <div class="debug-row"><span class="label">Ring Stage</span><span class="value">${ring.stage}${shrinking ? ` <span style="color:#ef4444;font-weight:bold">shrinking${timeRemaining !== null ? ` (${timeRemaining.toFixed(1)}s)` : ""}</span>` : ""}</span></div>
       <div class="debug-row"><span class="label">Safe Radius</span><span class="value">${ring.safeR}</span></div>
-      <div class="debug-row"><span class="label">In Safe Zone</span><span class="value" style="color:${inSafe ? '#44bb44' : '#ef4444'}">${inSafe ? "yes" : "no"}</span></div>
-      ${distSafe !== null ? `<div class="debug-row"><span class="label">Dist to Safe</span><span class="value">${distSafe}</span></div>` : ""}
-      <div class="debug-row"><span class="label">Rotate Score</span><span class="value">${rotateScore.toFixed(2)}</span></div>
-      <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill loot" style="width:${rotateScore * 100}%"></div></div></div>
-      <div class="debug-row"><span class="label">Has Target</span><span class="value" style="color:${hasTarget ? '#44bb44' : '#ef4444'}">${hasTarget ? "yes" : "no"}</span></div>
-      ${tp ? `<div class="debug-row"><span class="label">Target Pos</span><span class="value">[${tp[0]}, ${tp[1]}, ${tp[2]}]</span></div>` : ""}
+      <div class="debug-row"><span class="label">In Safe Zone</span><span class="value" style="color:${inSafe ? '#44bb44' : '#ef4444'}">${inSafe ? "yes" : `no${distSafe !== null ? ` (${distSafe}u away)` : ""}`}</span></div>
+    `;
+  }
+  if (envRows.trim()) {
+    html += `<div class="debug-card">
+      <h4>Environment</h4>
+      ${envRows}
     </div>`;
   }
 

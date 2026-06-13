@@ -623,16 +623,15 @@ function renderDebug() {
   //    brain selects via eligibility, not these scores. Useful for spotting
   //    eval-layer bugs (e.g., combat eval says 0 when it should see a target).
   // ===========================================
-  // Solo tasks emit validity/trigger facts (B3a); team tasks still emit scores
-  // until B3b strips them too.
+  // All evals emit validity/trigger facts (B3a/B3b) — no scores anywhere.
   const disengageOn = bot.disengageTriggered === 1;
   const rotateOn = bot.rotateTriggered === 1;
   const combatOn = typeof bot.combatTarget === "number" && bot.combatTarget >= 0;
   const lootOn = bot.lootHasTarget === 1;
   const healOn = !!bot.healAction;
-  const reviveScore = bot.reviveScore || 0;
-  const respawnScore = bot.respawnScore || 0;
-  const respawnDeliverScore = bot.respawnDeliverScore || 0;
+  const reviveOn = typeof bot.reviveTarget === "number" && bot.reviveTarget >= 0;
+  const respawnOn = typeof bot.respawnTarget === "number" && bot.respawnTarget >= 0;
+  const deliverOn = bot.deliverHasBeacon === 1;
   const onOff = (on, detail) => on
     ? `<span style="color:#fbbf24;font-weight:bold">YES</span>${detail ? ` <span class="muted">${esc(detail)}</span>` : ""}`
     : `<span class="muted">no</span>`;
@@ -643,12 +642,9 @@ function renderDebug() {
     <div class="debug-row"><span class="label">Combat target</span><span class="value">${onOff(combatOn, combatOn ? `#${bot.combatTarget}` : "")}</span></div>
     <div class="debug-row"><span class="label">Loot target</span><span class="value">${onOff(lootOn, "")}</span></div>
     <div class="debug-row"><span class="label">Heal</span><span class="value">${onOff(healOn, bot.healItem || "")}</span></div>
-    <div class="debug-row"><span class="label">Revive</span><span class="value">${reviveScore}</span></div>
-    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill heal" style="width:${reviveScore * 100}%"></div></div></div>
-    <div class="debug-row"><span class="label">Respawn</span><span class="value">${respawnScore}</span></div>
-    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill heal" style="width:${respawnScore * 100}%"></div></div></div>
-    <div class="debug-row"><span class="label">Respawn Deliver</span><span class="value">${respawnDeliverScore}</span></div>
-    <div class="score-bar"><div class="score-bar-bg"><div class="score-bar-fill heal" style="width:${respawnDeliverScore * 100}%"></div></div></div>
+    <div class="debug-row"><span class="label">Revive</span><span class="value">${onOff(reviveOn, reviveOn ? `#${bot.reviveTarget}` : "")}</span></div>
+    <div class="debug-row"><span class="label">Respawn</span><span class="value">${onOff(respawnOn, respawnOn ? `#${bot.respawnTarget}` : "")}</span></div>
+    <div class="debug-row"><span class="label">Respawn Deliver</span><span class="value">${onOff(deliverOn, "")}</span></div>
   </div>`;
 
   // ===========================================
